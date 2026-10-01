@@ -1,0 +1,46 @@
+{% extends "base.html" %}
+{% block titlu %}{{ t('nav_catalog', lang) }}{% endblock %}
+{% block continut %}
+<h2>{{ t('cat_titlu', lang) }}</h2>
+<div class="card">
+  <h3 style="margin-top:0">{{ t('cat_adauga_titlu', lang) }}</h3>
+  <div style="display:flex; gap:8px; flex-wrap:wrap;">
+    <input id="nume" placeholder="{{ t('cat_nume_ph', lang) }}" style="flex:2;">
+    <input id="pret" placeholder="{{ t('cat_pret_ph', lang) }}" type="number" step="0.01" style="flex:1;">
+    <input id="sku" placeholder="{{ t('cat_sku_ph', lang) }}" style="flex:1;">
+    <button class="btn" onclick="adauga()">{{ t('c_adauga', lang) }}</button>
+  </div>
+  <small style="color:#94a3b8">{{ t('cat_hint', lang) }}</small>
+</div>
+<div id="lista"></div>
+<script>
+const T = {
+  inactiv: {{ t('c_inactiv', lang) | tojson }},
+  gol: {{ t('cat_gol', lang) | tojson }},
+};
+async function incarca() {
+  const r = await fetch('/api/catalog');
+  const prods = await r.json();
+  const el = document.getElementById('lista');
+  el.innerHTML = prods.length ? prods.map(p =>
+    '<div class="card"><strong>' + p.nume.replace(/</g,'&lt;') + '</strong> ' +
+    (p.activ ? '' : '<span class="badge">' + T.inactiv + '</span>') + '<br>' +
+    '<span style="color:#94a3b8">' + p.pret.toFixed(2) + ' ' + p.moneda +
+    (p.sku ? ' · SKU ' + p.sku.replace(/</g,'&lt;') : '') + '</span></div>').join('')
+    : '<div class="card">' + T.gol + '</div>';
+}
+async function adauga() {
+  const nume = document.getElementById('nume').value.trim();
+  const pret = parseFloat(document.getElementById('pret').value) || 0;
+  const sku = document.getElementById('sku').value.trim();
+  if (!nume) return;
+  await fetch('/api/catalog', {method:'POST', headers:{'Content-Type':'application/json'},
+    body: JSON.stringify({nume, pret, sku})});
+  document.getElementById('nume').value = '';
+  document.getElementById('pret').value = '';
+  document.getElementById('sku').value = '';
+  incarca();
+}
+incarca();
+</script>
+{% endblock %}

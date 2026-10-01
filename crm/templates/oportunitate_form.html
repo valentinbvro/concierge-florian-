@@ -1,0 +1,37 @@
+{% extends "base.html" %}
+{% block title %}Editează oportunitate{% endblock %}
+{% block content %}
+<h1 class="text-2xl font-bold mb-6">Editează oportunitatea</h1>
+<form method="post" action="/oportunitati/{{ opp.id }}/editeaza" class="bg-white rounded shadow p-6 max-w-2xl space-y-4">
+  <div><label class="block text-sm font-medium mb-1">Nume *</label>
+    <input name="name" required value="{{ opp.name }}" class="w-full border rounded px-3 py-2"></div>
+  <div class="grid grid-cols-2 gap-4">
+    <div><label class="block text-sm font-medium mb-1">Firmă</label>
+      <select name="account_id" class="w-full border rounded px-3 py-2"><option value="">—</option>
+      {% for f in firme %}<option value="{{ f.id }}" {% if opp.account_id==f.id %}selected{% endif %}>{{ f.name }}</option>{% endfor %}</select></div>
+    <div><label class="block text-sm font-medium mb-1">Contact</label>
+      <select name="contact_id" class="w-full border rounded px-3 py-2"><option value="">—</option>
+      {% for c in contacte %}<option value="{{ c.id }}" {% if opp.contact_id==c.id %}selected{% endif %}>{{ c.full_name }}</option>{% endfor %}</select></div>
+  </div>
+  <div class="grid grid-cols-3 gap-4">
+    <div><label class="block text-sm font-medium mb-1">Valoare (EUR)</label>
+      <input type="number" step="0.01" min="0" name="amount" value="{{ opp.amount }}" class="w-full border rounded px-3 py-2"></div>
+    <div><label class="block text-sm font-medium mb-1">Stagiu</label>
+      <select name="stage" class="w-full border rounded px-3 py-2">
+      {% for k,l in stages %}<option value="{{ k }}" {% if opp.stage==k %}selected{% endif %}>{{ l }}</option>{% endfor %}</select></div>
+    <div><label class="block text-sm font-medium mb-1">Probabilitate (%)</label>
+      <input type="number" min="0" max="100" name="probability" value="{{ opp.probability }}" class="w-full border rounded px-3 py-2"></div>
+  </div>
+  <div class="grid grid-cols-2 gap-4">
+    <div><label class="block text-sm font-medium mb-1">Data închiderii</label>
+      <input type="date" name="close_date" value="{{ opp.close_date or '' }}" class="w-full border rounded px-3 py-2"></div>
+    <div><label class="block text-sm font-medium mb-1">Responsabil</label>
+      <select name="owner_id" class="w-full border rounded px-3 py-2">
+      {% for u in users %}<option value="{{ u.id }}" {% if opp.owner_id==u.id %}selected{% endif %}>{{ u.name }}</option>{% endfor %}</select></div>
+  </div>
+  <div class="flex gap-2">
+    <button class="bg-blue-600 text-white px-5 py-2 rounded hover:bg-blue-700">Salvează</button>
+    <a href="/oportunitati/{{ opp.id }}" class="bg-gray-200 px-5 py-2 rounded hover:bg-gray-300">Renunță</a>
+  </div>
+</form>
+{% endblock %}

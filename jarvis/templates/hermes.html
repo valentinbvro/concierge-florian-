@@ -1,0 +1,114 @@
+{% extends "base.html" %}
+{% block titlu %}{{ t('nav_hermes', lang) }}{% endblock %}
+{% block continut %}
+<h2>{{ t('hermes_titlu', lang) }}</h2>
+<p class="muted">{{ t('hermes_sub', lang) }}</p>
+<div class="card"><p style="margin:0">{{ t('hermes_bucla', lang) }}</p></div>
+
+<h3>{{ t('hermes_raport', lang) if false else '📡 Hermes' }}</h3>
+<div class="card">
+  <div id="raport" class="kpi-grid">…</div>
+  <button class="btn" onclick="analizeaza()">{{ t('hermes_analizeaza', lang) }}</button>
+</div>
+
+<h3>{{ t('hermes_sugestii', lang) }}</h3>
+<div id="sugestii"></div>
+
+<h3>{{ t('hermes_instructiuni', lang) }}</h3>
+<div class="card">
+  <select id="iagent">
+    <option value="vanzari">vanzari</option><option value="operatiuni">operatiuni</option>
+    <option value="finante">finante</option><option value="marketing">marketing</option>
+    <option value="research">research</option><option value="bi">bi</option>
+    <option value="produs">produs</option><option value="growth">growth</option>
+    <option value="risc">risc</option><option value="hermes">hermes</option>
+  </select>
+  <textarea id="itext" rows="3" style="width:100%;margin-top:6px" placeholder="{{ t('hermes_instr_ph', lang) }}"></textarea>
+  <button class="btn" onclick="salveazaInstructiune()">{{ t('hermes_salveaza_instr', lang) }}</button>
+  <div id="mesaj_instr" style="margin-top:6px"></div>
+</div>
+<div id="istoric_instr"></div>
+
+<script>
+const esc = s => (s || '').replace(/</g, '&lt;');
+const txt = {
+  semnale: "{{ t('hermes_semnale', lang) }}", invatate: "{{ t('hermes_invatate', lang) }}",
+  propuse: "{{ t('hermes_propuse', lang) }}", nicio: "{{ t('hermes_nicio', lang) }}",
+  aproba: "{{ t('hermes_aproba', lang) }}", respinge: "{{ t('hermes_respinge', lang) }}",
+  aplica: "{{ t('hermes_aplica', lang) }}", salveaza: "{{ t('hermes_salveaza', lang) }}",
+  ph: "{{ t('hermes_raspuns_ph', lang) }}"
+};
+async function incarca() {
+  const r = await (await fetch('/api/hermes/raport')).json();
+  document.getElementById('raport').innerHTML =
+    '<div class="kpi"><div class="kpi-v">' + r.semnale_neprocesate + '</div><div>' + txt.semnale + '</div></div>' +
+    '<div class="kpi"><div class="kpi-v">' + r.cunostinte_invatate + '</div><div>' + txt.invatate + '</div></div>' +
+    '<div class="kpi"><div class="kpi-v">' + (r.sugestii_pe_status.propusa || 0) + '</div><div>' + txt.propuse + '</div></div>';
+  const d = await (await fetch('/api/hermes/sugestii')).json();
+  const el = document.getElementById('sugestii');
+  if (!d.sugestii.length) { el.innerHTML = '<div class="card">' + txt.nicio + '</div>'; }
+  else el.innerHTML = '<div class="card">' + d.sugestii.map(s => {
+    let det = {};
+    try { det = JSON.parse(s.detalii || '{}'); } catch (e) {}
+    let h = '<div style="padding:10px 0;border-top:1px solid #334155"><strong>#' + s.id + '</strong> ' +
+      '<span class="badge">' + esc(s.tip) + '</span> <span class="badge">' + esc(s.status) + '</span><br>' +
+      esc(s.titlu);
+    if (s.tip === 'cunostinta_noua' && det.intrebare)
+      h += '<br><em>❓ ' + esc(det.intrebare) + '</em>';
+    if (det.observatie) h += '<br><em>' + esc(det.observatie) + '</em>';
+    if (s.status === 'propusa' || s.status === 'aprobata') {
+      if (s.tip === 'cunostinta_noua')
+        h += '<br><textarea id="r' + s.id + '" rows="2" style="width:100%;margin-top:6px" placeholder="' + txt.ph + '">' +
+             esc(det.raspuns_propus || '') + '</textarea>' +
+             '<button class="btn" onclick="salveazaRaspuns(' + s.id + ')">' + txt.salveaza + '</button> ';
+      if (s.status === 'propusa')
+        h += '<button class="btn" onclick="decide(' + s.id + ',\'aprobata\')">' + txt.aproba + '</button> ' +
+             '<button class="btn btn-danger" onclick="decide(' + s.id + ',\'respinsa\')">' + txt.respinge + '</button> ';
+      else
+        h += '<button class="btn" onclick="aplica(' + s.id + ')">' + txt.aplica + '</button>';
+    }
+    return h + '</div>';
+  }).join('') + '</div>';
+  const ii = await (await fetch('/api/hermes/instructiuni')).json();
+  document.getElementById('istoric_instr').innerHTML = '<div class="card">' +
+    (ii.instructiuni.length ? ii.instructiuni.map(i =>
+      '<div style="padding:6px 0;border-top:1px solid #334155"><strong>' + esc(i.agent) + '</strong> ' +
+      '<span class="badge">v' + i.versiune + '</span> ' +
+      (i.activa ? '<span class="badge" style="background:#14532d">activă</span>' : '') +
+      '<br><span class="muted">' + esc((i.text || '').slice(0, 160)) + (i.text && i.text.length > 160 ? '…' : '') + '</span></div>'
+    ).join('') : '—') + '</div>';
+}
+async function analizeaza() {
+  await fetch('/api/jobs/hermes', {method: 'POST'});
+  incarca();
+}
+async function decide(id, decizie) {
+  await fetch('/api/hermes/sugestie/' + id + '/decide', {method: 'POST',
+    headers: {'Content-Type': 'application/json'}, body: JSON.stringify({decizie})});
+  incarca();
+}
+async function salveazaRaspuns(id) {
+  const raspuns = document.getElementById('r' + id).value.trim();
+  if (!raspuns) return;
+  await fetch('/api/hermes/sugestie/' + id + '/raspuns', {method: 'POST',
+    headers: {'Content-Type': 'application/json'}, body: JSON.stringify({raspuns})});
+  incarca();
+}
+async function aplica(id) {
+  const r = await (await fetch('/api/hermes/sugestie/' + id + '/aplica', {method: 'POST'})).json();
+  if (!r.ok) alert(r.cod);
+  incarca();
+}
+async function salveazaInstructiune() {
+  const agent = document.getElementById('iagent').value;
+  const text = document.getElementById('itext').value.trim();
+  if (!text) return;
+  const r = await (await fetch('/api/hermes/instructiune', {method: 'POST',
+    headers: {'Content-Type': 'application/json'}, body: JSON.stringify({agent, text})})).json();
+  document.getElementById('mesaj_instr').textContent = r.agent + ' v' + r.versiune;
+  document.getElementById('itext').value = '';
+  incarca();
+}
+incarca();
+</script>
+{% endblock %}

@@ -1,0 +1,19 @@
+# secrete
+.env
+*.env
+# python
+__pycache__/
+*.py[cod]
+venv/
+.venv/
+# baze de date locale
+*.db
+*.db-journal
+*.sqlite3
+# pdf-uri generate
+oferte_pdf/
+# sistem
+.DS_Store
+Thumbs.db
+# logs
+*.log

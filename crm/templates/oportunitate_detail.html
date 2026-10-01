@@ -1,0 +1,47 @@
+{% extends "base.html" %}
+{% block title %}Oportunitate: {{ opp.name }}{% endblock %}
+{% block content %}
+<div class="flex items-center justify-between mb-6">
+  <h1 class="text-2xl font-bold">{{ opp.name }}</h1>
+  <div class="flex gap-2">
+    <a href="/oportunitati/{{ opp.id }}/editeaza" class="bg-gray-200 px-4 py-2 rounded hover:bg-gray-300">Editează</a>
+    <form method="post" action="/oportunitati/{{ opp.id }}/sterge" onsubmit="return confirm('Sigur ștergi oportunitatea?')">
+      <button class="bg-red-100 text-red-700 px-4 py-2 rounded hover:bg-red-200">Șterge</button>
+    </form>
+  </div>
+</div>
+<div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+  <div class="bg-white rounded shadow p-5">
+    <h2 class="font-semibold mb-3">Detalii</h2>
+    <dl class="text-sm space-y-2">
+      <div class="flex"><dt class="w-36 text-gray-500">Valoare</dt><dd class="font-semibold">{{ "%.2f"|format(opp.amount) }} EUR</dd></div>
+      <div class="flex"><dt class="w-36 text-gray-500">Stagiu</dt><dd><span class="px-2 py-1 rounded text-xs bg-blue-100 text-blue-800">{{ dict(stages).get(opp.stage, opp.stage) }}</span></dd></div>
+      <div class="flex"><dt class="w-36 text-gray-500">Probabilitate</dt><dd>{{ opp.probability }}%</dd></div>
+      <div class="flex"><dt class="w-36 text-gray-500">Data închiderii</dt><dd>{{ opp.close_date.strftime('%d.%m.%Y') if opp.close_date else '—' }}</dd></div>
+      <div class="flex"><dt class="w-36 text-gray-500">Firmă</dt><dd>{% if opp.account %}<a href="/firme/{{ opp.account.id }}" class="text-blue-600 hover:underline">{{ opp.account.name }}</a>{% else %}—{% endif %}</dd></div>
+      <div class="flex"><dt class="w-36 text-gray-500">Contact</dt><dd>{% if opp.contact %}<a href="/contacte/{{ opp.contact.id }}" class="text-blue-600 hover:underline">{{ opp.contact.full_name }}</a>{% else %}—{% endif %}</dd></div>
+      <div class="flex"><dt class="w-36 text-gray-500">Responsabil</dt><dd>{{ opp.owner.name if opp.owner else '—' }}</dd></div>
+    </dl>
+  </div>
+  <div class="bg-white rounded shadow p-5">
+    <div class="flex items-center justify-between mb-3">
+      <h2 class="font-semibold">Activități</h2>
+      <a href="/activitati/nou?related_kind=oportunitate&related_id={{ opp.id }}" class="text-sm bg-blue-600 text-white px-3 py-1 rounded hover:bg-blue-700">+ Adaugă activitate</a>
+    </div>
+    {% if activitati %}
+    <ul class="divide-y text-sm">
+      {% for a in activitati %}
+      <li class="py-2 flex justify-between">
+        <div><span class="text-xs bg-gray-100 rounded px-2 py-0.5 mr-2">{{ dict(tipuri_act).get(a.tip, a.tip) }}</span>{{ a.subject }}
+          <div class="text-xs text-gray-500">{{ 'Închisă' if a.status=='inchis' else 'Deschisă' }}</div></div>
+        <form method="post" action="/activitati/{{ a.id }}/comuta"><button class="text-xs text-blue-600 hover:underline">{{ 'Redeschide' if a.status=='inchis' else 'Închide' }}</button></form>
+      </li>
+      {% endfor %}
+    </ul>
+    {% else %}
+    <p class="text-sm text-gray-500">Nicio activitate.</p>
+    {% endif %}
+  </div>
+</div>
+<a href="/oportunitati" class="text-blue-600 hover:underline text-sm">← Înapoi la kanban</a>
+{% endblock %}

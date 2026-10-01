@@ -1,0 +1,17 @@
+[Unit]
+Description=CRM Firma (FastAPI)
+After=network.target
+
+[Service]
+# Schimbă User și căile după caz. Rulează ca user non-root.
+User=crm
+Group=crm
+WorkingDirectory=/opt/crm
+Environment="CRM_SECRET=SCHIMBA-MA-CU-O-VALOARE-ALEATOARE-LUNGA"
+Environment="PORT=8000"
+ExecStart=/opt/crm/venv/bin/uvicorn app.main:app --host 127.0.0.1 --port 8000 --workers 2
+Restart=always
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target

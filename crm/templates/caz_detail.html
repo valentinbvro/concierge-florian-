@@ -1,0 +1,57 @@
+{% extends "base.html" %}
+{% block title %}Caz: {{ caz.subject }}{% endblock %}
+{% block content %}
+<div class="flex items-center justify-between mb-6">
+  <h1 class="text-2xl font-bold">{{ caz.subject }}</h1>
+  <form method="post" action="/cazuri/{{ caz.id }}/sterge" onsubmit="return confirm('Sigur ștergi cazul?')">
+    <button class="bg-red-100 text-red-700 px-4 py-2 rounded hover:bg-red-200">Șterge</button>
+  </form>
+</div>
+<div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+  <div class="bg-white rounded shadow p-5">
+    <h2 class="font-semibold mb-3">Actualizează cazul</h2>
+    <form method="post" action="/cazuri/{{ caz.id }}/editeaza" class="space-y-4">
+      <input type="hidden" name="subject" value="{{ caz.subject }}">
+      <input type="hidden" name="description" value="{{ caz.description }}">
+      <input type="hidden" name="account_id" value="{{ caz.account_id or '' }}">
+      <input type="hidden" name="contact_id" value="{{ caz.contact_id or '' }}">
+      <input type="hidden" name="owner_id" value="{{ caz.owner_id or '' }}">
+      <div class="grid grid-cols-2 gap-4">
+        <div><label class="block text-sm font-medium mb-1">Status</label>
+          <select name="status" class="w-full border rounded px-3 py-2">
+          {% for k,l in case_status %}<option value="{{ k }}" {% if caz.status==k %}selected{% endif %}>{{ l }}</option>{% endfor %}</select></div>
+        <div><label class="block text-sm font-medium mb-1">Prioritate</label>
+          <select name="priority" class="w-full border rounded px-3 py-2">
+          {% for k,l in priorities %}<option value="{{ k }}" {% if caz.priority==k %}selected{% endif %}>{{ l }}</option>{% endfor %}</select></div>
+      </div>
+      <button class="bg-blue-600 text-white px-5 py-2 rounded hover:bg-blue-700">Actualizează</button>
+    </form>
+    <dl class="text-sm space-y-2 mt-5 pt-4 border-t">
+      <div class="flex"><dt class="w-32 text-gray-500">Firmă</dt><dd>{% if caz.account %}<a href="/firme/{{ caz.account.id }}" class="text-blue-600 hover:underline">{{ caz.account.name }}</a>{% else %}—{% endif %}</dd></div>
+      <div class="flex"><dt class="w-32 text-gray-500">Contact</dt><dd>{% if caz.contact %}<a href="/contacte/{{ caz.contact.id }}" class="text-blue-600 hover:underline">{{ caz.contact.full_name }}</a>{% else %}—{% endif %}</dd></div>
+      <div class="flex"><dt class="w-32 text-gray-500">Responsabil</dt><dd>{{ caz.owner.name if caz.owner else '—' }}</dd></div>
+      <div class="flex"><dt class="w-32 text-gray-500">Descriere</dt><dd>{{ caz.description or '—' }}</dd></div>
+    </dl>
+  </div>
+  <div class="bg-white rounded shadow p-5">
+    <div class="flex items-center justify-between mb-3">
+      <h2 class="font-semibold">Activități</h2>
+      <a href="/activitati/nou?related_kind=caz&related_id={{ caz.id }}" class="text-sm bg-blue-600 text-white px-3 py-1 rounded hover:bg-blue-700">+ Adaugă activitate</a>
+    </div>
+    {% if activitati %}
+    <ul class="divide-y text-sm">
+      {% for a in activitati %}
+      <li class="py-2 flex justify-between">
+        <div><span class="text-xs bg-gray-100 rounded px-2 py-0.5 mr-2">{{ dict(tipuri_act).get(a.tip, a.tip) }}</span>{{ a.subject }}
+          <div class="text-xs text-gray-500">{{ 'Închisă' if a.status=='inchis' else 'Deschisă' }}</div></div>
+        <form method="post" action="/activitati/{{ a.id }}/comuta"><button class="text-xs text-blue-600 hover:underline">{{ 'Redeschide' if a.status=='inchis' else 'Închide' }}</button></form>
+      </li>
+      {% endfor %}
+    </ul>
+    {% else %}
+    <p class="text-sm text-gray-500">Nicio activitate.</p>
+    {% endif %}
+  </div>
+</div>
+<a href="/cazuri" class="text-blue-600 hover:underline text-sm">← Înapoi la cazuri</a>
+{% endblock %}

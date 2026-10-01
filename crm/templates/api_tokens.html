@@ -1,0 +1,77 @@
+{% extends "base.html" %}
+{% block title %}Tokenuri API{% endblock %}
+{% block content %}
+<h1 class="text-2xl font-bold mb-2">Tokenuri API</h1>
+<p class="text-sm text-gray-500 mb-6 max-w-2xl">
+  Tokenurile permit accesul programatic la CRM prin API-ul REST
+  (<code class="bg-gray-100 px-1 rounded">/api/v1/…</code>) cu header-ul
+  <code class="bg-gray-100 px-1 rounded">Authorization: Bearer &lt;token&gt;</code>.
+  Documentația completă e în fișierul <code class="bg-gray-100 px-1 rounded">API.md</code>.
+  Păstrează tokenurile secrete — nu le pune în cod public.
+</p>
+
+{% if new_token %}
+<div class="bg-green-50 border border-green-300 rounded p-5 mb-6 max-w-2xl">
+  <div class="font-semibold text-green-800 mb-1">Token creat! Copiază-l acum — nu se va mai afișa.</div>
+  <code class="block bg-white border rounded px-3 py-2 mt-2 break-all select-all">{{ new_token }}</code>
+</div>
+{% endif %}
+
+<div class="bg-white rounded shadow p-5 max-w-2xl mb-6">
+  <h2 class="font-semibold mb-3">Token nou</h2>
+  <form method="post" action="/setari/api/nou" class="flex gap-2">
+    <input name="name" placeholder="Etichetă, ex: Site web / Integrare facturare"
+           class="flex-1 border rounded px-3 py-2">
+    <button class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700">Generează</button>
+  </form>
+</div>
+
+<div class="bg-white rounded shadow p-5 max-w-3xl">
+  <h2 class="font-semibold mb-3">Tokenuri existente</h2>
+  {% if tokens %}
+  <table class="w-full text-sm">
+    <thead>
+      <tr class="text-left text-gray-500 border-b">
+        <th class="py-2">Etichetă</th>
+        {% if user.role == "admin" %}<th class="py-2">Utilizator</th>{% endif %}
+        <th class="py-2">Prefix</th>
+        <th class="py-2">Creat</th>
+        <th class="py-2">Ultima folosire</th>
+        <th class="py-2">Stare</th>
+        <th></th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for t in tokens %}
+      <tr class="border-b">
+        <td class="py-2 font-medium">{{ t.name }}</td>
+        {% if user.role == "admin" %}<td class="py-2">{{ users.get(t.user_id, "—") }}</td>{% endif %}
+        <td class="py-2"><code class="bg-gray-100 px-1 rounded">{{ t.prefix }}…</code></td>
+        <td class="py-2 text-gray-500">{{ t.created_at.strftime("%d.%m.%Y") if t.created_at else "—" }}</td>
+        <td class="py-2 text-gray-500">{{ t.last_used_at.strftime("%d.%m.%Y %H:%M") if t.last_used_at else "niciodată" }}</td>
+        <td class="py-2">
+          {% if t.active %}
+          <span class="bg-green-100 text-green-800 text-xs px-2 py-1 rounded">activ</span>
+          {% else %}
+          <span class="bg-gray-200 text-gray-600 text-xs px-2 py-1 rounded">revocat</span>
+          {% endif %}
+        </td>
+        <td class="py-2 text-right">
+          {% if t.active %}
+          <form method="post" action="/setari/api/{{ t.id }}/revoca" class="inline">
+            <button class="text-red-600 hover:underline text-xs"
+                    onclick="return confirm('Revoci acest token? Accesul prin el se oprește imediat.')">
+              Revocă
+            </button>
+          </form>
+          {% endif %}
+        </td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+  {% else %}
+  <p class="text-gray-500 text-sm">Niciun token încă. Generează unul de mai sus.</p>
+  {% endif %}
+</div>
+{% endblock %}

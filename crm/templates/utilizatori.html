@@ -1,0 +1,44 @@
+{% extends "base.html" %}
+{% block title %}Utilizatori{% endblock %}
+{% block content %}
+<h1 class="text-2xl font-bold mb-6">Utilizatori</h1>
+<div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+  <div class="bg-white rounded shadow p-5">
+    <h2 class="font-semibold mb-4">Listă utilizatori</h2>
+    <ul class="divide-y text-sm">
+      {% for u in users %}
+      <li class="py-2 flex items-center justify-between">
+        <div>
+          <div class="font-medium">{{ u.name }} {% if not u.active %}<span class="text-xs text-red-500">(dezactivat)</span>{% endif %}</div>
+          <div class="text-xs text-gray-500">{{ u.email }} · {{ dict(roluri).get(u.role, u.role) }}</div>
+        </div>
+        {% if u.id != user.id %}
+        <form method="post" action="/utilizatori/{{ u.id }}/comuta">
+          <button class="text-xs px-3 py-1 rounded {{ 'bg-green-100 text-green-700' if not u.active else 'bg-gray-200' }}">
+            {{ 'Activează' if not u.active else 'Dezactivează' }}
+          </button>
+        </form>
+        {% else %}
+        <span class="text-xs text-gray-400">(tu)</span>
+        {% endif %}
+      </li>
+      {% endfor %}
+    </ul>
+  </div>
+  <div class="bg-white rounded shadow p-5 h-fit">
+    <h2 class="font-semibold mb-4">Adaugă utilizator</h2>
+    <form method="post" action="/utilizatori/nou" class="space-y-4">
+      <div><label class="block text-sm font-medium mb-1">Nume *</label>
+        <input name="name" required class="w-full border rounded px-3 py-2"></div>
+      <div><label class="block text-sm font-medium mb-1">Email *</label>
+        <input type="email" name="email" required class="w-full border rounded px-3 py-2"></div>
+      <div><label class="block text-sm font-medium mb-1">Parolă *</label>
+        <input type="password" name="password" required class="w-full border rounded px-3 py-2"></div>
+      <div><label class="block text-sm font-medium mb-1">Rol</label>
+        <select name="role" class="w-full border rounded px-3 py-2">
+        {% for k,l in roluri %}<option value="{{ k }}">{{ l }}</option>{% endfor %}</select></div>
+      <button class="bg-blue-600 text-white px-5 py-2 rounded hover:bg-blue-700">Adaugă</button>
+    </form>
+  </div>
+</div>
+{% endblock %}

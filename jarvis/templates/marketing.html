@@ -1,0 +1,49 @@
+{% extends "base.html" %}
+{% block titlu %}{{ t('nav_marketing', lang) }}{% endblock %}
+{% block continut %}
+<h2>{{ t('ma_titlu', lang) }}</h2>
+<div class="card">
+  <small style="color:#94a3b8">{{ t('ma_hint', lang) }}</small>
+  <h3 style="margin-top:8px">{{ t('ma_adauga_titlu', lang) }}</h3>
+  <div style="display:flex; gap:8px; flex-wrap:wrap; margin-bottom:8px;">
+    <select id="p_canal">
+      <option value="instagram">Instagram</option>
+      <option value="facebook">Facebook</option>
+      <option value="linkedin">LinkedIn</option>
+    </select>
+    <button class="btn" onclick="plan()">{{ t('ma_plan_btn', lang) }}</button>
+  </div>
+  <textarea id="p_text" placeholder="{{ t('ma_text_ph', lang) }}" rows="3" style="width:100%; margin-bottom:8px;"></textarea>
+  <input id="p_data" placeholder="{{ t('ma_data_ph', lang) }}" style="width:100%; margin-bottom:8px;">
+  <button class="btn" onclick="adauga()">{{ t('c_salveaza', lang) }}</button>
+</div>
+<div id="plan"></div>
+<div id="lista"></div>
+<script>
+async function incarca() {
+  const r = await fetch('/api/postari');
+  const ps = await r.json();
+  document.getElementById('lista').innerHTML = ps.map(p =>
+    '<div class="card"><strong>' + p.canal + '</strong> <span class="badge">' + p.status + '</span><br>' +
+    '<p style="white-space:pre-wrap">' + p.text.replace(/</g,'&lt;') + '</p>' +
+    (p.data_programata ? '<small style="color:#94a3b8">' + p.data_programata.slice(0,16).replace('T',' ') + '</small>' : '') +
+    '</div>').join('');
+}
+async function adauga() {
+  const text = document.getElementById('p_text').value.trim();
+  if (!text) return;
+  await fetch('/api/postari', {method:'POST', headers:{'Content-Type':'application/json'},
+    body: JSON.stringify({canal: document.getElementById('p_canal').value, text})});
+  document.getElementById('p_text').value = '';
+  incarca();
+}
+async function plan() {
+  const r = await fetch('/api/chat', {method:'POST', headers:{'Content-Type':'application/json'},
+    body: JSON.stringify({text: 'plan editorial', lang: '{{ lang }}'})});
+  const j = await r.json();
+  document.getElementById('plan').innerHTML =
+    '<div class="card" style="white-space:pre-wrap">' + j.raspuns.replace(/</g,'&lt;') + '</div>';
+}
+incarca();
+</script>
+{% endblock %}

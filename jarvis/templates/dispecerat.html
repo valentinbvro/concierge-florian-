@@ -1,0 +1,114 @@
+{% extends "base.html" %}
+{% block titlu %}{{ t('nav_dispecerat', lang) }}{% endblock %}
+{% block continut %}
+<h2>{{ t('di_titlu', lang) }}</h2>
+
+<div class="card">
+  <h3 style="margin-top:0">{{ t('di_adauga_cursa', lang) }}</h3>
+  <div style="display:flex; gap:8px; flex-wrap:wrap;">
+    <input id="c_nume" placeholder="{{ t('di_client_ph', lang) }}" style="flex:1; min-width:140px;">
+    <input id="c_tel" placeholder="{{ t('di_tel_ph', lang) }}" style="flex:1; min-width:120px;">
+    <input id="c_pre" placeholder="{{ t('di_preluare_ph', lang) }}" style="flex:1; min-width:140px;">
+    <input id="c_des" placeholder="{{ t('di_destinatie_ph', lang) }}" style="flex:1; min-width:140px;">
+    <input id="c_cand" placeholder="{{ t('di_cand_ph', lang) }}" style="flex:1; min-width:180px;">
+    <button class="btn" onclick="adaugaCursa()">{{ t('c_adauga', lang) }}</button>
+  </div>
+</div>
+
+<div class="card">
+  <h3 style="margin-top:0">{{ t('di_curse', lang) }}</h3>
+  {% if curse %}
+  <table>
+    <tr><th>#</th><th>⏰</th><th>Client</th><th>Traseu</th><th>{{ t('di_status', lang) }}</th><th></th></tr>
+    {% for c in curse %}
+    <tr>
+      <td>{{ c.id }}</td>
+      <td>{{ c.data_ora.strftime('%H:%M') if c.data_ora else '—' }}</td>
+      <td>{{ c.client_nume or '—' }}<br><small style="color:#94a3b8">{{ c.client_telefon or '' }}</small></td>
+      <td>{{ c.preluare or '—' }} → {{ c.destinatie or '—' }}<br>
+          <small style="color:#94a3b8">{{ c.sofer.nume if c.sofer else '' }}{{ ' · ' + c.masina.marca_model if c.masina else '' }}</small></td>
+      <td><span class="badge">{{ t('st_' + c.status, lang) }}</span></td>
+      <td style="white-space:nowrap">
+        {% if not c.sofer_id %}<button class="btn mic" onclick="atribuie({{ c.id }})">{{ t('di_atribuie_auto', lang) }}</button>{% endif %}
+        {% if c.status == 'rezervata' %}<button class="btn mic verde" onclick="status({{ c.id }},'confirmata')">✓</button>{% endif %}
+        {% if c.status == 'confirmata' %}<button class="btn mic verde" onclick="status({{ c.id }},'in_curs')">▶</button>{% endif %}
+        {% if c.status == 'in_curs' %}<button class="btn mic verde" onclick="status({{ c.id }},'finalizata')">■</button>{% endif %}
+        {% if c.status in ('rezervata','confirmata') %}<button class="btn mic rosu" onclick="status({{ c.id }},'anulata')">✕</button>{% endif %}
+      </td>
+    </tr>
+    {% endfor %}
+  </table>
+  {% else %}
+  <p style="color:#94a3b8">{{ t('di_nicio_cursa', lang) }}</p>
+  {% endif %}
+</div>
+
+<div class="card">
+  <h3 style="margin-top:0">{{ t('di_soferi', lang) }}</h3>
+  {% if soferi %}
+  <table>
+    {% for s in soferi %}
+    <tr><td><strong>{{ s.nume }}</strong></td><td>{{ s.telefon or '—' }}</td>
+        <td><span class="badge">{{ t('st_' + s.status, lang) if s.status in ('liber','ocupat') else s.status }}</span></td></tr>
+    {% endfor %}
+  </table>
+  {% else %}<p style="color:#94a3b8">{{ t('di_niciun_sofer', lang) }}</p>{% endif %}
+  <div style="display:flex; gap:8px; margin-top:8px;">
+    <input id="s_nume" placeholder="{{ t('di_nume_ph', lang) }}" style="flex:1;">
+    <input id="s_tel" placeholder="{{ t('di_tel_ph', lang) }}" style="flex:1;">
+    <button class="btn" onclick="adaugaSofer()">{{ t('c_adauga', lang) }}</button>
+  </div>
+</div>
+
+<div class="card">
+  <h3 style="margin-top:0">{{ t('di_masini', lang) }}</h3>
+  {% if masini %}
+  <table>
+    {% for m in masini %}
+    <tr><td><strong>{{ m.marca_model }}</strong></td><td>{{ m.numar or '—' }}</td>
+        <td>{{ m.locuri }} locuri</td>
+        <td><span class="badge">{{ m.status }}</span></td></tr>
+    {% endfor %}
+  </table>
+  {% else %}<p style="color:#94a3b8">{{ t('di_nicio_masina', lang) }}</p>{% endif %}
+  <div style="display:flex; gap:8px; margin-top:8px;">
+    <input id="m_marca" placeholder="{{ t('di_marca_ph', lang) }}" style="flex:2;">
+    <input id="m_numar" placeholder="{{ t('di_numar_ph', lang) }}" style="flex:1;">
+    <button class="btn" onclick="adaugaMasina()">{{ t('c_adauga', lang) }}</button>
+  </div>
+</div>
+
+<div class="card">
+  <h3 style="margin-top:0">{{ t('di_notificari', lang) }}</h3>
+  {% if notifs %}
+    {% for n in notifs %}
+    <div style="padding:6px 0; border-top:1px solid #334155;">
+      <small style="color:#94a3b8">{{ n.canal }} → {{ n.destinatar }}</small><br>{{ n.text }}
+    </div>
+    {% endfor %}
+  {% else %}<p style="color:#94a3b8">{{ t('di_nicio_notif', lang) }}</p>{% endif %}
+</div>
+
+<script>
+async function post(url, body) {
+  await fetch(url, {method:'POST', headers:{'Content-Type':'application/json'},
+    body: JSON.stringify(body || {})});
+  location.reload();
+}
+function adaugaCursa() {
+  const v = id => document.getElementById(id).value.trim();
+  post('/api/curse', {client_nume: v('c_nume'), client_telefon: v('c_tel'),
+    preluare: v('c_pre'), destinatie: v('c_des'), cand: v('c_cand')});
+}
+function adaugaSofer() {
+  post('/api/soferi', {nume: document.getElementById('s_nume').value.trim(),
+    telefon: document.getElementById('s_tel').value.trim()});
+}
+function adaugaMasina() {
+  post('/api/masini', {marca_model: document.getElementById('m_marca').value.trim(),
+    numar: document.getElementById('m_numar').value.trim()});
+}
+function atribuie(id) { post('/api/curse/' + id + '/atribuie', {}); }
+function status(id, s) { post('/api/curse/' + id + '/status', {status: s}); }
+</script>
+{% endblock %}

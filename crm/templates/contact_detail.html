@@ -1,0 +1,45 @@
+{% extends "base.html" %}
+{% block title %}Contact: {{ contact.full_name }}{% endblock %}
+{% block content %}
+<div class="flex items-center justify-between mb-6">
+  <h1 class="text-2xl font-bold">{{ contact.full_name }}</h1>
+  <div class="flex gap-2">
+    <a href="/contacte/{{ contact.id }}/editeaza" class="bg-gray-200 px-4 py-2 rounded hover:bg-gray-300">Editează</a>
+    <form method="post" action="/contacte/{{ contact.id }}/sterge" onsubmit="return confirm('Sigur ștergi contactul?')">
+      <button class="bg-red-100 text-red-700 px-4 py-2 rounded hover:bg-red-200">Șterge</button>
+    </form>
+  </div>
+</div>
+<div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+  <div class="bg-white rounded shadow p-5">
+    <h2 class="font-semibold mb-3">Detalii</h2>
+    <dl class="text-sm space-y-2">
+      <div class="flex"><dt class="w-32 text-gray-500">Funcție</dt><dd>{{ contact.title or '—' }}</dd></div>
+      <div class="flex"><dt class="w-32 text-gray-500">Firmă</dt><dd>{% if contact.account %}<a href="/firme/{{ contact.account.id }}" class="text-blue-600 hover:underline">{{ contact.account.name }}</a>{% else %}—{% endif %}</dd></div>
+      <div class="flex"><dt class="w-32 text-gray-500">Email</dt><dd>{{ contact.email or '—' }}</dd></div>
+      <div class="flex"><dt class="w-32 text-gray-500">Telefon</dt><dd>{{ contact.phone or '—' }}</dd></div>
+      <div class="flex"><dt class="w-32 text-gray-500">Responsabil</dt><dd>{{ contact.owner.name if contact.owner else '—' }}</dd></div>
+    </dl>
+  </div>
+  <div class="bg-white rounded shadow p-5">
+    <div class="flex items-center justify-between mb-3">
+      <h2 class="font-semibold">Activități</h2>
+      <a href="/activitati/nou?related_kind=contact&related_id={{ contact.id }}" class="text-sm bg-blue-600 text-white px-3 py-1 rounded hover:bg-blue-700">+ Adaugă activitate</a>
+    </div>
+    {% if activitati %}
+    <ul class="divide-y text-sm">
+      {% for a in activitati %}
+      <li class="py-2 flex justify-between">
+        <div><span class="text-xs bg-gray-100 rounded px-2 py-0.5 mr-2">{{ dict(tipuri_act).get(a.tip, a.tip) }}</span>{{ a.subject }}
+          <div class="text-xs text-gray-500">{{ 'Închisă' if a.status=='inchis' else 'Deschisă' }}</div></div>
+        <form method="post" action="/activitati/{{ a.id }}/comuta"><button class="text-xs text-blue-600 hover:underline">{{ 'Redeschide' if a.status=='inchis' else 'Închide' }}</button></form>
+      </li>
+      {% endfor %}
+    </ul>
+    {% else %}
+    <p class="text-sm text-gray-500">Nicio activitate.</p>
+    {% endif %}
+  </div>
+</div>
+<a href="/contacte" class="text-blue-600 hover:underline text-sm">← Înapoi la contacte</a>
+{% endblock %}

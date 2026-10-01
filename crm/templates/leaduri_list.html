@@ -1,0 +1,38 @@
+{% extends "base.html" %}
+{% block title %}Leaduri{% endblock %}
+{% block content %}
+<div class="flex items-center justify-between mb-6">
+  <h1 class="text-2xl font-bold">Leaduri</h1>
+  <a href="/leaduri/nou" class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700">+ Lead nou</a>
+</div>
+<form method="get" class="flex gap-2 mb-4">
+  <input name="q" value="{{ q }}" placeholder="Caută nume, firmă, email…" class="border rounded px-3 py-2 w-64">
+  <select name="status" class="border rounded px-3 py-2">
+    <option value="">Toate statusurile</option>
+    {% for k,l in lead_status %}<option value="{{ k }}" {% if status==k %}selected{% endif %}>{{ l }}</option>{% endfor %}
+  </select>
+  <button class="bg-gray-200 px-4 py-2 rounded hover:bg-gray-300">Filtrează</button>
+</form>
+<div class="bg-white rounded shadow overflow-hidden">
+<table class="w-full text-sm">
+  <thead class="bg-gray-50 text-left"><tr>
+    <th class="px-4 py-2">Nume</th><th class="px-4 py-2">Firmă</th><th class="px-4 py-2">Email</th>
+    <th class="px-4 py-2">Telefon</th><th class="px-4 py-2">Status</th><th class="px-4 py-2">Responsabil</th>
+  </tr></thead>
+  <tbody class="divide-y">
+  {% for l in leaduri %}
+  <tr class="hover:bg-gray-50">
+    <td class="px-4 py-2"><a href="/leaduri/{{ l.id }}" class="text-blue-600 hover:underline font-medium">{{ l.full_name }}</a></td>
+    <td class="px-4 py-2">{{ l.company }}</td>
+    <td class="px-4 py-2">{{ l.email }}</td>
+    <td class="px-4 py-2">{{ l.phone }}</td>
+    <td class="px-4 py-2"><span class="px-2 py-1 rounded text-xs bg-blue-100 text-blue-800">{{ dict(lead_status).get(l.status, l.status) }}</span></td>
+    <td class="px-4 py-2">{{ l.owner.name if l.owner else '' }}</td>
+  </tr>
+  {% else %}
+  <tr><td colspan="6" class="px-4 py-6 text-center text-gray-500">Niciun lead găsit.</td></tr>
+  {% endfor %}
+  </tbody>
+</table>
+</div>
+{% endblock %}

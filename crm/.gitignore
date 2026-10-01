@@ -1,0 +1,11 @@
+# Python
+__pycache__/
+*.py[cod]
+venv/
+.env
+
+# Baza de date (se regenerează cu date demo la prima pornire)
+*.db
+
+# Sistem
+.DS_Store

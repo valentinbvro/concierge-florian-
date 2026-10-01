@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="ro">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>{% block title %}CRM{% endblock %} — {{ company }}</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+</head>
+<body class="bg-gray-100 text-gray-800">
+<div class="flex min-h-screen">
+  <!-- Sidebar -->
+  <aside class="w-60 bg-slate-900 text-slate-200 flex flex-col fixed inset-y-0">
+    <div class="px-5 py-5 border-b border-slate-700">
+      <div class="text-lg font-bold text-white truncate">{{ company }}</div>
+      <div class="text-xs text-slate-400">Sistem CRM</div>
+    </div>
+    <nav class="flex-1 px-3 py-4 space-y-1 text-sm">
+      {% set nav = [
+        ('dashboard','/','Panou principal'),
+        ('leaduri','/leaduri','Leaduri'),
+        ('firme','/firme','Firme'),
+        ('contacte','/contacte','Contacte'),
+        ('oportunitati','/oportunitati','Oportunități'),
+        ('cazuri','/cazuri','Cazuri'),
+        ('activitati','/activitati','Activități'),
+      ] %}
+      {% for key, url, label in nav %}
+      <a href="{{ url }}" class="block px-3 py-2 rounded hover:bg-slate-700 {% if active==key %}bg-slate-700 text-white font-semibold{% endif %}">{{ label }}</a>
+      {% endfor %}
+      {% if user and user.role == 'admin' %}
+      <a href="/utilizatori" class="block px-3 py-2 rounded hover:bg-slate-700 {% if active=='utilizatori' %}bg-slate-700 text-white font-semibold{% endif %}">Utilizatori</a>
+      {% endif %}
+      <a href="/setari" class="block px-3 py-2 rounded hover:bg-slate-700 {% if active=='setari' %}bg-slate-700 text-white font-semibold{% endif %}">Setări</a>
+    </nav>
+    <div class="px-5 py-4 border-t border-slate-700 text-xs">
+      <div class="font-semibold text-white truncate">{{ user.name if user else '' }}</div>
+      <div class="text-slate-400 mb-2">{{ user.email if user else '' }}</div>
+      <a href="/logout" class="text-red-300 hover:text-red-200">Deconectare</a>
+    </div>
+  </aside>
+  <!-- Conținut -->
+  <main class="flex-1 ml-60 p-8">
+    {% block content %}{% endblock %}
+  </main>
+</div>
+{% block scripts %}{% endblock %}
+</body>
+</html>

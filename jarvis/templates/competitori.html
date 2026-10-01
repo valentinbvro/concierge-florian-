@@ -1,0 +1,45 @@
+{% extends "base.html" %}
+{% block titlu %}{{ t('nav_competitori', lang) }}{% endblock %}
+{% block continut %}
+<h2>{{ t('co_titlu', lang) }}</h2>
+<div class="card">
+  <h3 style="margin-top:0">{{ t('co_adauga_titlu', lang) }}</h3>
+  <div style="display:flex; gap:8px;">
+    <input id="nume" placeholder="{{ t('co_nume_ph', lang) }}" style="flex:1;">
+    <input id="web" placeholder="{{ t('co_web_ph', lang) }}" style="flex:1;">
+    <button class="btn" onclick="adauga()">{{ t('c_adauga', lang) }}</button>
+  </div>
+</div>
+<div id="lista"></div>
+<script>
+const T = { obsPh: {{ t('co_obs_ph', lang) | tojson }} };
+async function incarca() {
+  const r = await fetch('/api/competitori');
+  const cs = await r.json();
+  const el = document.getElementById('lista');
+  el.innerHTML = cs.length ? cs.map(c =>
+    '<div class="card"><strong>' + c.nume.replace(/</g,'&lt;') + '</strong>' +
+    (c.website ? ' · <span style="color:#94a3b8">' + c.website.replace(/</g,'&lt;') + '</span>' : '') + '<br>' +
+    (c.observatii ? '<p style="white-space:pre-wrap; color:#94a3b8">' + c.observatii.replace(/</g,'&lt;') + '</p>' : '') +
+    '<div style="display:flex; gap:8px; margin-top:8px;">' +
+    '<input id="obs' + c.id + '" placeholder="' + T.obsPh + '" style="flex:1;">' +
+    '<button class="btn mic" onclick="obs(' + c.id + ')">+</button></div></div>'
+  ).join('') : '<div class="card">{{ t('co_niciun', lang) }}</div>';
+}
+async function adauga() {
+  const nume = document.getElementById('nume').value.trim();
+  if (!nume) return;
+  await fetch('/api/competitori', {method:'POST', headers:{'Content-Type':'application/json'},
+    body: JSON.stringify({nume, website: document.getElementById('web').value.trim()})});
+  incarca();
+}
+async function obs(id) {
+  const text = document.getElementById('obs' + id).value.trim();
+  if (!text) return;
+  await fetch('/api/competitori/' + id + '/observatii', {method:'POST',
+    headers:{'Content-Type':'application/json'}, body: JSON.stringify({text})});
+  incarca();
+}
+incarca();
+</script>
+{% endblock %}

@@ -1,0 +1,48 @@
+{% extends "base.html" %}
+{% block titlu %}{{ t('nav_chat', lang) }}{% endblock %}
+{% block continut %}
+<div class="card">
+  <div id="mesaje" style="height: 380px; overflow-y: auto; margin-bottom: 12px; display: flex; flex-direction: column; gap: 8px;"></div>
+  <div style="display: flex; gap: 8px;">
+    <input id="intrare" type="text" placeholder="{{ t('chat_placeholder', lang) }}" autocomplete="off"
+           style="flex: 1; padding: 10px; border-radius: 8px; border: 1px solid #334155; background: #0f172a; color: #e2e8f0;">
+    <button class="btn" onclick="trimite()">{{ t('chat_trimite', lang) }}</button>
+  </div>
+</div>
+<div class="card">
+  <h3 style="margin-top:0">{{ t('chat_agenti', lang) }} <span class="badge">9</span></h3>
+  {% for a in agenti %}
+  <div style="padding: 8px 0; border-top: 1px solid #334155;">
+    <strong>{{ a.nume }}</strong>
+    <span class="badge {% if a.faza in ('1','2') %}faza{% endif %}">Faza {{ a.faza }}</span><br>
+    <small style="color:#94a3b8">{{ a.descriere }}</small>
+  </div>
+  {% endfor %}
+</div>
+<script>
+const mesaje = document.getElementById('mesaje');
+const intrare = document.getElementById('intrare');
+const LANG = "{{ lang }}";
+function adauga(autor, text, mine) {
+  const d = document.createElement('div');
+  d.style.cssText = 'max-width: 80%; padding: 10px 14px; border-radius: 12px; white-space: pre-wrap;' +
+    (mine ? 'align-self: flex-end; background: #0284c7; color: #fff;'
+           : 'align-self: flex-start; background: #334155;');
+  d.innerHTML = '<strong>' + autor + '</strong><br>' + text.replace(/</g, '&lt;');
+  mesaje.appendChild(d);
+  mesaje.scrollTop = mesaje.scrollHeight;
+}
+async function trimite() {
+  const text = intrare.value.trim();
+  if (!text) return;
+  intrare.value = '';
+  adauga('Tu', text, true);
+  const r = await fetch('/api/chat', {method: 'POST', headers: {'Content-Type': 'application/json'},
+    body: JSON.stringify({text, lang: LANG})});
+  const j = await r.json();
+  adauga('Jarvis', j.raspuns, false);
+}
+intrare.addEventListener('keydown', e => { if (e.key === 'Enter') trimite(); });
+adauga('Jarvis', {{ t('chat_bunvenit', lang) | tojson }}, false);
+</script>
+{% endblock %}

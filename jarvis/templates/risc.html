@@ -1,0 +1,80 @@
+{% extends "base.html" %}
+{% block titlu %}{{ t('nav_risc', lang) }}{% endblock %}
+{% block continut %}
+<h2>{{ t('nav_risc', lang) }}</h2>
+<h3>{{ t('pg_risc_contracte', lang) }}</h3>
+<div class="card">
+  <input id="cnume" placeholder="📄 …" style="width:30%">
+  <textarea id="ctext" rows="3" style="width:100%;margin-top:6px" placeholder="…"></textarea>
+  <button class="btn" onclick="analizeaza()">{{ t('c_adauga', lang) }}</button>
+  <div id="analiza" style="margin-top:8px"></div>
+</div>
+<h3>{{ t('pg_risc_verif', lang) }}</h3>
+<div class="card">
+  <input id="vtip" placeholder="itp / asigurare / licenta_sofer" style="width:25%">
+  <input id="vref" placeholder="B-123-ABC" style="width:20%">
+  <input id="vexp" placeholder="AAAA-LL-ZZ" style="width:15%">
+  <button class="btn" onclick="adaugaVerificare()">{{ t('c_adauga', lang) }}</button>
+</div>
+<div id="verificari"></div>
+<h3>{{ t('pg_risc_nereguli', lang) }}</h3>
+<div class="card">
+  <input id="ntitlu" placeholder="🚨 …" style="width:60%">
+  <select id="nsev">
+    <option value="scazuta">scazuta</option>
+    <option value="medie" selected>medie</option>
+    <option value="ridicata">ridicata</option>
+  </select>
+  <button class="btn" onclick="semnaleaza()">{{ t('c_adauga', lang) }}</button>
+</div>
+<div id="nereguli"></div>
+<script>
+const esc = s => (s || '').replace(/</g, '&lt;');
+async function incarca() {
+  const vs = await (await fetch('/api/verificari')).json();
+  document.getElementById('verificari').innerHTML = '<div class="card"><table>' +
+    '<tr><th>#</th><th>Tip</th><th>Referință</th><th>Expiră</th><th>Status</th></tr>' +
+    vs.map(v => '<tr><td>' + v.id + '</td><td><strong>' + esc(v.tip) + '</strong></td>' +
+      '<td>' + esc(v.referinta) + '</td><td>' + (v.expira_la || '—') + '</td>' +
+      '<td><span class="badge" style="' +
+      (v.status === 'expirata' ? 'background:#7f1d1d' : v.status === 'expira_curand' ? 'background:#92400e' : '') +
+      '">' + esc(v.status) + '</span></td></tr>').join('') + '</table></div>';
+  const ns = await (await fetch('/api/nereguli')).json();
+  document.getElementById('nereguli').innerHTML = '<div class="card">' +
+    (ns.length ? ns.map(n =>
+      '<div style="padding:6px 0;border-top:1px solid #334155;"><strong>#' + n.id + '</strong> ' +
+      '<span class="badge">' + esc(n.severitate) + '</span> ' + esc(n.titlu) +
+      ' <span class="badge">' + esc(n.status) + '</span></div>').join('') : '—') + '</div>';
+}
+async function adaugaVerificare() {
+  const tip = document.getElementById('vtip').value.trim();
+  const expira = document.getElementById('vexp').value.trim();
+  if (!tip || !expira) return;
+  const r = await fetch('/api/verificari', {method: 'POST',
+    headers: {'Content-Type': 'application/json'},
+    body: JSON.stringify({tip, referinta: document.getElementById('vref').value,
+      expira_la: expira})});
+  if (!r.ok) alert('data_invalida');
+  incarca();
+}
+async function semnaleaza() {
+  const titlu = document.getElementById('ntitlu').value.trim();
+  if (!titlu) return;
+  await fetch('/api/nereguli', {method: 'POST', headers: {'Content-Type': 'application/json'},
+    body: JSON.stringify({titlu, severitate: document.getElementById('nsev').value})});
+  document.getElementById('ntitlu').value = '';
+  incarca();
+}
+async function analizeaza() {
+  const nume = document.getElementById('cnume').value.trim() || 'contract';
+  const text = document.getElementById('ctext').value.trim();
+  if (!text) return;
+  const r = await (await fetch('/api/chat', {method: 'POST',
+    headers: {'Content-Type': 'application/json'},
+    body: JSON.stringify({text: 'analizează contract: ' + nume + ' | ' + text})})).json();
+  document.getElementById('analiza').innerHTML =
+    '<pre style="white-space:pre-wrap">' + esc(r.raspuns) + '</pre>';
+}
+incarca();
+</script>
+{% endblock %}

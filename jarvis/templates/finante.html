@@ -1,0 +1,83 @@
+{% extends "base.html" %}
+{% block titlu %}{{ t('nav_finante', lang) }}{% endblock %}
+{% block continut %}
+<h2>{{ t('fin_titlu', lang) }}</h2>
+<div class="card" style="border-left: 4px solid {% if demo %}#f59e0b{% else %}#4ade80{% endif %};">
+  {% if demo %}{{ t('fin_demo', lang) }}{% else %}{{ t('fin_live', lang) }}{% endif %}
+</div>
+<div class="card">
+  <p style="color:#94a3b8">{{ t('fin_hint', lang) }}</p>
+  <button class="btn" onclick="sincronizeaza()">{{ t('fin_sincronizeaza', lang) }}</button>
+</div>
+<h3>{{ t('fin_titlu', lang) }}</h3>
+<div id="facturi"></div>
+<h3>{{ t('fin_restante_titlu', lang) }}</h3>
+<div id="restante"></div>
+<h3>{{ t('fin_anomalii_titlu', lang) }}</h3>
+<div id="anomalii"></div>
+<script>
+const T = {
+  numar: {{ t('fin_col_numar', lang) | tojson }},
+  client: {{ t('fin_col_client', lang) | tojson }},
+  total: {{ t('fin_col_total', lang) | tojson }},
+  status: {{ t('fin_col_status', lang) | tojson }},
+  scadenta: {{ t('fin_col_scadenta', lang) | tojson }},
+  actiuni: {{ t('fin_col_actiuni', lang) | tojson }},
+  emite: {{ t('fin_emite', lang) | tojson }},
+  trimite: {{ t('fin_trimite', lang) | tojson }},
+  platita: {{ t('fin_platita', lang) | tojson }},
+  nicioAnomalie: {{ t('fin_anomalii_zero', lang) | tojson }},
+};
+const esc = s => (s || '').replace(/</g, '&lt;');
+async function incarca() {
+  const facturi = await (await fetch('/api/facturi')).json();
+  document.getElementById('facturi').innerHTML =
+    '<div class="card"><table><tr><th>' + T.numar + '</th><th>' + T.client + '</th><th>' +
+    T.total + '</th><th>' + T.status + '</th><th>' + T.scadenta + '</th><th>' + T.actiuni + '</th></tr>' +
+    facturi.map(f =>
+      '<tr><td><strong>' + esc(f.numar) + '</strong>' +
+      (f.numar_pennylane ? '<br><small style="color:#94a3b8">' + esc(f.numar_pennylane) + '</small>' : '') + '</td>' +
+      '<td>' + esc(f.client_nume) + '</td><td>' + f.total.toFixed(2) + ' EUR</td>' +
+      '<td><span class="badge">' + esc(f.status) + '</span></td>' +
+      '<td>' + esc(f.deadline || '—') + '</td><td>' +
+      (f.status === 'ciorna'
+        ? '<button class="btn mic verde" onclick="actiune(' + f.id + ', \'emite\')">' + T.emite + '</button>'
+        : '') +
+      ((f.status === 'emisa' || f.status === 'partial')
+        ? ' <button class="btn mic" onclick="actiune(' + f.id + ', \'trimite\')">' + T.trimite + '</button>' +
+          ' <button class="btn mic verde" onclick="platita(' + f.id + ', ' + f.total + ')">' + T.platita + '</button>'
+        : '') +
+      '</td></tr>').join('') + '</table></div>';
+  const an = await (await fetch('/api/finante/anomalii')).json();
+  document.getElementById('anomalii').innerHTML =
+    '<div class="card">' + (an.length
+      ? an.map(a => '<div style="padding:6px 0;border-top:1px solid #334155;"><span class="badge">' +
+               esc(a.severitate) + '</span> ' + esc(a.descriere) + '</div>').join('')
+      : T.nicioAnomalie) + '</div>';
+  const r = await (await fetch('/api/finante/restante')).json();
+  document.getElementById('restante').innerHTML =
+    '<div class="card">' + (r.length
+      ? r.map(f => '<div style="padding:6px 0;border-top:1px solid #334155;"><strong>' + esc(f.numar) +
+               '</strong> — ' + esc(f.client_nume) + ': ' + f.total.toFixed(2) + ' EUR</div>').join('')
+      : T.nicioAnomalie) + '</div>';
+}
+async function actiune(id, ce) {
+  await fetch('/api/facturi/' + id + '/' + ce, {method: 'POST',
+    headers: {'Content-Type': 'application/json'}, body: '{}'});
+  incarca();
+}
+async function platita(id, total) {
+  const suma = prompt('Suma încasată (EUR):', total.toFixed(2));
+  if (suma === null) return;
+  await fetch('/api/facturi/' + id + '/platita', {method: 'POST',
+    headers: {'Content-Type': 'application/json'},
+    body: JSON.stringify({suma: parseFloat(suma), metoda: 'transfer'})});
+  incarca();
+}
+async function sincronizeaza() {
+  await fetch('/api/jobs/sync-pennylane', {method: 'POST'});
+  incarca();
+}
+incarca();
+</script>
+{% endblock %}

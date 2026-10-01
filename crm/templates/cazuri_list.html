@@ -1,0 +1,46 @@
+{% extends "base.html" %}
+{% block title %}Cazuri{% endblock %}
+{% block content %}
+<div class="flex items-center justify-between mb-6">
+  <h1 class="text-2xl font-bold">Cazuri (suport)</h1>
+  <a href="/cazuri/nou" class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700">+ Caz nou</a>
+</div>
+<form method="get" class="flex gap-2 mb-4">
+  <input name="q" value="{{ q }}" placeholder="Caută subiect…" class="border rounded px-3 py-2 w-64">
+  <select name="status" class="border rounded px-3 py-2">
+    <option value="">Toate statusurile</option>
+    {% for k,l in case_status %}<option value="{{ k }}" {% if status==k %}selected{% endif %}>{{ l }}</option>{% endfor %}
+  </select>
+  <select name="priority" class="border rounded px-3 py-2">
+    <option value="">Toate prioritățile</option>
+    {% for k,l in priorities %}<option value="{{ k }}" {% if priority==k %}selected{% endif %}>{{ l }}</option>{% endfor %}
+  </select>
+  <button class="bg-gray-200 px-4 py-2 rounded hover:bg-gray-300">Filtrează</button>
+</form>
+<div class="bg-white rounded shadow overflow-hidden">
+<table class="w-full text-sm">
+  <thead class="bg-gray-50 text-left"><tr>
+    <th class="px-4 py-2">Subiect</th><th class="px-4 py-2">Firmă</th><th class="px-4 py-2">Status</th>
+    <th class="px-4 py-2">Prioritate</th><th class="px-4 py-2">Responsabil</th><th class="px-4 py-2">Creat</th>
+  </tr></thead>
+  <tbody class="divide-y">
+  {% for c in cazuri %}
+  <tr class="hover:bg-gray-50">
+    <td class="px-4 py-2"><a href="/cazuri/{{ c.id }}" class="text-blue-600 hover:underline font-medium">{{ c.subject }}</a></td>
+    <td class="px-4 py-2">{{ c.account.name if c.account else '—' }}</td>
+    <td class="px-4 py-2"><span class="px-2 py-1 rounded text-xs bg-gray-100">{{ dict(case_status).get(c.status, c.status) }}</span></td>
+    <td class="px-4 py-2">
+      {% if c.priority=='urgenta' %}<span class="px-2 py-1 rounded text-xs bg-red-100 text-red-800 font-semibold">Urgentă</span>
+      {% elif c.priority=='ridicata' %}<span class="px-2 py-1 rounded text-xs bg-orange-100 text-orange-800">Ridicată</span>
+      {% else %}<span class="px-2 py-1 rounded text-xs bg-gray-100">{{ dict(priorities).get(c.priority, c.priority) }}</span>{% endif %}
+    </td>
+    <td class="px-4 py-2">{{ c.owner.name if c.owner else '' }}</td>
+    <td class="px-4 py-2">{{ c.created_at.strftime('%d.%m.%Y') if c.created_at else '' }}</td>
+  </tr>
+  {% else %}
+  <tr><td colspan="6" class="px-4 py-6 text-center text-gray-500">Niciun caz găsit.</td></tr>
+  {% endfor %}
+  </tbody>
+</table>
+</div>
+{% endblock %}

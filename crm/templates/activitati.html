@@ -1,0 +1,57 @@
+{% extends "base.html" %}
+{% block title %}Activități{% endblock %}
+{% block content %}
+<div class="flex items-center justify-between mb-6">
+  <h1 class="text-2xl font-bold">Activități</h1>
+  <a href="/activitati/nou" class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700">+ Activitate nouă</a>
+</div>
+<form method="get" class="flex gap-2 mb-4">
+  <select name="filtru" class="border rounded px-3 py-2">
+    <option value="mele" {% if filtru=='mele' %}selected{% endif %}>Sarcinile mele</option>
+    <option value="toate" {% if filtru=='toate' %}selected{% endif %}>Toate</option>
+  </select>
+  <select name="status" class="border rounded px-3 py-2">
+    <option value="">Deschise + închise</option>
+    <option value="deschis" {% if status=='deschis' %}selected{% endif %}>Deschise</option>
+    <option value="inchis" {% if status=='inchis' %}selected{% endif %}>Închise</option>
+  </select>
+  <button class="bg-gray-200 px-4 py-2 rounded hover:bg-gray-300">Filtrează</button>
+</form>
+<div class="bg-white rounded shadow overflow-hidden">
+<table class="w-full text-sm">
+  <thead class="bg-gray-50 text-left"><tr>
+    <th class="px-4 py-2 w-10"></th><th class="px-4 py-2">Subiect</th><th class="px-4 py-2">Tip</th>
+    <th class="px-4 py-2">Legat de</th><th class="px-4 py-2">Scadență</th>
+    <th class="px-4 py-2">Responsabil</th><th class="px-4 py-2">Status</th><th class="px-4 py-2"></th>
+  </tr></thead>
+  <tbody class="divide-y">
+  {% for a in activitati %}
+  <tr class="hover:bg-gray-50 {% if a.status=='inchis' %}opacity-60{% endif %}">
+    <td class="px-4 py-2">
+      <form method="post" action="/activitati/{{ a.id }}/comuta">
+        <button title="{{ 'Redeschide' if a.status=='inchis' else 'Marchează încheiată' }}"
+          class="w-5 h-5 border rounded inline-flex items-center justify-center {% if a.status=='inchis' %}bg-green-500 text-white{% endif %}">
+          {% if a.status=='inchis' %}✓{% endif %}
+        </button>
+      </form>
+    </td>
+    <td class="px-4 py-2 font-medium {% if a.status=='inchis' %}line-through{% endif %}">{{ a.subject }}</td>
+    <td class="px-4 py-2"><span class="px-2 py-1 rounded text-xs bg-gray-100">{{ dict(tipuri_act).get(a.tip, a.tip) }}</span></td>
+    <td class="px-4 py-2 text-gray-500">{{ a.related_label }}</td>
+    <td class="px-4 py-2 {% if a.due_date and a.due_date < today and a.status=='deschis' %}text-red-600 font-semibold{% endif %}">
+      {{ a.due_date.strftime('%d.%m.%Y') if a.due_date else '—' }}</td>
+    <td class="px-4 py-2">{{ a.owner.name if a.owner else '' }}</td>
+    <td class="px-4 py-2">{{ 'Închisă' if a.status=='inchis' else 'Deschisă' }}</td>
+    <td class="px-4 py-2">
+      <form method="post" action="/activitati/{{ a.id }}/sterge" onsubmit="return confirm('Sigur ștergi?')">
+        <button class="text-red-500 hover:underline text-xs">Șterge</button>
+      </form>
+    </td>
+  </tr>
+  {% else %}
+  <tr><td colspan="8" class="px-4 py-6 text-center text-gray-500">Nicio activitate.</td></tr>
+  {% endfor %}
+  </tbody>
+</table>
+</div>
+{% endblock %}

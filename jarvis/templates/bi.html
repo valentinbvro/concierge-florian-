@@ -1,0 +1,41 @@
+{% extends "base.html" %}
+{% block titlu %}{{ t('nav_bi', lang) }}{% endblock %}
+{% block continut %}
+<h2>{{ t('bi_titlu', lang) }}</h2>
+<div id="kpi" style="display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:12px;"></div>
+<div class="card" style="margin-top:16px;">
+  <h3 style="margin-top:0">{{ t('bi_top', lang) }}</h3>
+  <div id="top"></div>
+</div>
+<script>
+const T = {
+  incasari_azi: {{ t('bi_incasari_azi', lang) | tojson }},
+  facturat_luna: {{ t('bi_facturat_luna', lang) | tojson }},
+  facturi_luna: {{ t('bi_facturi_luna', lang) | tojson }},
+  restante: {{ t('bi_restante', lang) | tojson }},
+  curse_azi: {{ t('bi_curse_azi', lang) | tojson }},
+  tva: {{ t('bi_tva', lang) | tojson }},
+  anomalii: {{ t('bi_anomalii', lang) | tojson }},
+};
+async function incarca() {
+  const r = await (await fetch('/api/bi/dashboard')).json();
+  const card = (eticheta, val, sub) =>
+    '<div class="card" style="margin:0"><div style="color:#94a3b8;font-size:.85em">' + eticheta + '</div>' +
+    '<div style="font-size:1.6em;font-weight:700">' + val + '</div>' +
+    (sub ? '<div style="color:#94a3b8;font-size:.8em">' + sub + '</div>' : '') + '</div>';
+  document.getElementById('kpi').innerHTML =
+    card(T.incasari_azi, r.incasari_azi.toFixed(2) + ' €') +
+    card(T.facturat_luna, r.facturat_luna.toFixed(2) + ' €') +
+    card(T.facturi_luna, r.facturi_emise_luna) +
+    card(T.restante, r.restante_nr, r.restante_total.toFixed(2) + ' €') +
+    card(T.curse_azi, r.curse_finalizate_azi) +
+    card(T.tva, r.tva_luna.toFixed(2) + ' €') +
+    card(T.anomalii, r.anomalii_nr);
+  document.getElementById('top').innerHTML =
+    r.top_clienti.map(([n, v]) =>
+      '<div style="padding:6px 0;border-top:1px solid #334155;">' +
+      n.replace(/</g, '&lt;') + ': <strong>' + v.toFixed(2) + ' €</strong></div>').join('') || '—';
+}
+incarca();
+</script>
+{% endblock %}

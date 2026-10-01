@@ -1,0 +1,158 @@
+{% extends "base.html" %}
+{% block titlu %}{{ t('demo_titlu', lang) }}{% endblock %}
+{% block continut %}
+<style>
+.demo-board{background:radial-gradient(1200px 500px at 50% -10%,#12305e 0%,#0a1a33 45%,#060d1d 100%);
+  border:1px solid #c9a227;border-radius:14px;padding:28px;color:#e8eef7;margin-bottom:20px}
+.demo-board h2{color:#e9c766;letter-spacing:.14em;margin:0 0 4px;font-size:1.7em}
+.demo-board .sub{color:#9fb3d1;letter-spacing:.06em;margin-bottom:18px}
+.demo-badge{display:inline-block;background:#c9a227;color:#1a1206;font-weight:700;
+  letter-spacing:.12em;font-size:.78em;padding:6px 14px;border-radius:999px;margin-bottom:16px}
+.kpi-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:12px;margin:18px 0}
+.kpi{background:rgba(255,255,255,.045);border:1px solid rgba(201,162,39,.35);border-radius:10px;padding:14px}
+.kpi .eticheta{color:#9fb3d1;font-size:.8em;letter-spacing:.04em}
+.kpi .val{color:#fff;font-size:1.65em;font-weight:700;margin-top:4px}
+.kpi .val small{font-size:.55em;color:#e9c766;font-weight:400}
+.demo-sec{margin-top:26px}
+.demo-sec h3{color:#e9c766;letter-spacing:.1em;font-size:1.05em;border-bottom:1px solid rgba(201,162,39,.35);
+  padding-bottom:8px;margin-bottom:12px}
+table.demo-t{width:100%;border-collapse:collapse;font-size:.92em}
+table.demo-t th{color:#9fb3d1;text-align:left;padding:8px;border-bottom:1px solid rgba(201,162,39,.35);
+  font-weight:600;letter-spacing:.04em}
+table.demo-t td{padding:8px;border-bottom:1px solid rgba(255,255,255,.07);color:#e8eef7}
+table.demo-t tr:last-child td{border-bottom:none}
+.pill{display:inline-block;padding:2px 10px;border-radius:999px;font-size:.78em;font-weight:600}
+.pill.ok{background:rgba(46,204,113,.18);color:#7be3a8;border:1px solid rgba(46,204,113,.5)}
+.pill.warn{background:rgba(241,196,15,.15);color:#f5d76e;border:1px solid rgba(241,196,15,.5)}
+.pill.bad{background:rgba(231,76,60,.15);color:#f1948a;border:1px solid rgba(231,76,60,.5)}
+.pill.info{background:rgba(52,152,219,.15);color:#85c1e9;border:1px solid rgba(52,152,219,.5)}
+.bars{display:flex;align-items:flex-end;gap:10px;height:190px;padding-top:10px}
+.bar-col{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:flex-end;height:100%}
+.bar{width:100%;max-width:56px;background:linear-gradient(180deg,#e9c766,#8a6d1c);border-radius:6px 6px 0 0;min-height:4px}
+.bar-col .zi{color:#9fb3d1;font-size:.75em;margin-top:6px}
+.bar-col .sum{color:#fff;font-size:.75em;font-weight:600;margin-bottom:4px}
+.btn-demo{background:#c9a227;color:#1a1206;border:none;font-weight:700;padding:10px 22px;border-radius:8px;
+  cursor:pointer;letter-spacing:.04em;margin-right:10px}
+.btn-demo.sec{background:transparent;color:#e9c766;border:1px solid #c9a227}
+.btn-demo:hover{filter:brightness(1.1)}
+.demo-nota{color:#9fb3d1;font-size:.85em;margin-top:22px;border-top:1px solid rgba(201,162,39,.25);padding-top:12px}
+.cols2{display:grid;grid-template-columns:1fr 1fr;gap:20px}
+@media(max-width:800px){.cols2{grid-template-columns:1fr}}
+</style>
+
+<div class="demo-board">
+  <h2>{{ t('demo_titlu', lang) }}</h2>
+  <div class="sub">{{ t('demo_sub', lang) }} &nbsp;·&nbsp; TLP</div>
+
+  {% if demo_activ %}
+    <div><span class="demo-badge">◆ {{ t('demo_banner', lang) }}</span></div>
+
+    <div class="kpi-grid">
+      <div class="kpi"><div class="eticheta">{{ t('demo_kpi_venit', lang) }}</div>
+        <div class="val">{{ "%.0f"|format(bord.fin.facturat_luna) }} <small>€</small></div></div>
+      <div class="kpi"><div class="eticheta">{{ t('demo_kpi_curse', lang) }}</div>
+        <div class="val">{{ bord.curse_luna }}</div></div>
+      <div class="kpi"><div class="eticheta">{{ t('demo_kpi_leaduri', lang) }}</div>
+        <div class="val">{{ bord.leaduri_tot }}</div></div>
+      <div class="kpi"><div class="eticheta">{{ t('demo_kpi_roas', lang) }}</div>
+        <div class="val">{{ bord.roas_mediu }}<small>x</small></div></div>
+      <div class="kpi"><div class="eticheta">{{ t('demo_kpi_restante', lang) }}</div>
+        <div class="val">{{ bord.fin.restante_nr }} <small>{{ "%.0f"|format(bord.fin.restante_total) }} €</small></div></div>
+    </div>
+
+    <div class="demo-sec">
+      <h3>◈ {{ t('demo_marketing', lang) }}</h3>
+      <table class="demo-t">
+        <tr><th>Campanie</th><th>Canal</th><th>Reach</th><th>Leaduri</th><th>Venit €</th><th>Cost €</th><th>ROAS</th><th>Status</th></tr>
+        {% for c in bord.campanii %}
+        <tr>
+          <td>{{ c.nume }}</td><td>{{ c.canal }}</td>
+          <td>{{ "{:,}".format(c.reach).replace(",", " ") }}</td>
+          <td>{{ c.leaduri }}</td>
+          <td>{{ "{:,}".format(c.venit|int).replace(",", " ") }}</td>
+          <td>{{ "{:,}".format(c.cost|int).replace(",", " ") }}</td>
+          <td><strong style="color:#e9c766">{{ c.roas }}x</strong></td>
+          <td><span class="pill {{ 'ok' if c.status=='activa' else 'info' }}">{{ c.status }}</span></td>
+        </tr>
+        {% endfor %}
+      </table>
+    </div>
+
+    <div class="cols2">
+      <div class="demo-sec">
+        <h3>◈ {{ t('demo_analitica', lang) }}</h3>
+        <div class="bars">
+          {% for z in bord.trend %}
+          <div class="bar-col">
+            <div class="sum">{{ z.val|int }}€</div>
+            <div class="bar" style="height:{{ (z.val / bord.max_trend * 100)|round(1) }}%"></div>
+            <div class="zi">{{ z.zi }}</div>
+          </div>
+          {% endfor %}
+        </div>
+      </div>
+      <div class="demo-sec">
+        <h3>◈ {{ t('demo_top', lang) }}</h3>
+        <table class="demo-t">
+          {% for nume, total in bord.fin.top_clienti %}
+          <tr><td>{{ nume }}</td><td style="text-align:right"><strong>{{ "%.2f"|format(total) }} €</strong></td></tr>
+          {% endfor %}
+        </table>
+        <h3 style="margin-top:20px">◈ Curse / status</h3>
+        <div>
+          {% for st, nr in bord.statusuri.items() %}
+          <span class="pill {{ 'ok' if st=='finalizata' else ('info' if st in ('confirmata','in_curs') else ('warn' if st=='rezervata' else 'bad')) }}"
+                style="margin:0 6px 6px 0">{{ st }}: {{ nr }}</span>
+          {% endfor %}
+        </div>
+      </div>
+    </div>
+
+    <div class="cols2">
+      <div class="demo-sec">
+        <h3>◈ {{ t('demo_operatiuni', lang) }}</h3>
+        <table class="demo-t">
+          <tr><th>#</th><th>Client</th><th>Ruta</th><th>Ora</th><th>Șofer</th><th>Status</th></tr>
+          {% for c in bord.curse_azi %}
+          <tr><td>{{ c.id }}</td><td>{{ c.client }}</td><td>{{ c.ruta }}</td><td>{{ c.ora }}</td>
+              <td>{{ c.sofer }}</td>
+              <td><span class="pill {{ 'ok' if c.status=='finalizata' else ('info' if c.status in ('confirmata','in_curs') else 'warn') }}">{{ c.status }}</span></td></tr>
+          {% endfor %}
+        </table>
+      </div>
+      <div class="demo-sec">
+        <h3>◈ {{ t('demo_soferi', lang) }}</h3>
+        <table class="demo-t">
+          {% for s in bord.soferi %}
+          <tr><td>{{ s.nume }}</td>
+              <td style="text-align:right"><span class="pill {{ 'ok' if s.status=='liber' else 'info' }}">{{ s.status }}</span></td></tr>
+          {% endfor %}
+        </table>
+      </div>
+    </div>
+
+    <div class="demo-nota">{{ t('demo_nota', lang) }}</div>
+    <div style="margin-top:14px">
+      <button class="btn-demo sec" onclick="stergeDemo()">{{ t('demo_sterge', lang) }}</button>
+    </div>
+  {% else %}
+    <div><span class="demo-badge">◇ DEMO</span></div>
+    <p style="color:#c8d6ea">{{ t('demo_gol', lang) }}</p>
+    <button class="btn-demo" onclick="incarcaDemo()">{{ t('demo_incarca', lang) }}</button>
+  {% endif %}
+</div>
+
+<script>
+async function incarcaDemo() {
+  const r = await (await fetch('/api/demo/seed', {method: 'POST'})).json();
+  if (r.ok) location.reload();
+  else alert('Eroare: ' + (r.eroare || 'necunoscută'));
+}
+async function stergeDemo() {
+  if (!confirm({{ t('demo_confirm_sterge', lang) | tojson }})) return;
+  const r = await (await fetch('/api/demo/sterge', {method: 'POST'})).json();
+  if (r.ok) location.reload();
+  else alert('Eroare: ' + (r.eroare || 'necunoscută'));
+}
+</script>
+{% endblock %}

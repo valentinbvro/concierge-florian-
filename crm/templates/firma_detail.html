@@ -1,0 +1,79 @@
+{% extends "base.html" %}
+{% block title %}Firmă: {{ firma.name }}{% endblock %}
+{% block content %}
+<div class="flex items-center justify-between mb-6">
+  <h1 class="text-2xl font-bold">{{ firma.name }}</h1>
+  <div class="flex gap-2">
+    <a href="/firme/{{ firma.id }}/editeaza" class="bg-gray-200 px-4 py-2 rounded hover:bg-gray-300">Editează</a>
+    <form method="post" action="/firme/{{ firma.id }}/sterge" onsubmit="return confirm('Sigur ștergi firma?')">
+      <button class="bg-red-100 text-red-700 px-4 py-2 rounded hover:bg-red-200">Șterge</button>
+    </form>
+  </div>
+</div>
+<div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+  <div class="bg-white rounded shadow p-5">
+    <h2 class="font-semibold mb-3">Detalii</h2>
+    <dl class="text-sm space-y-2">
+      <div class="flex"><dt class="w-32 text-gray-500">Industrie</dt><dd>{{ firma.industry or '—' }}</dd></div>
+      <div class="flex"><dt class="w-32 text-gray-500">Website</dt><dd>{{ firma.website or '—' }}</dd></div>
+      <div class="flex"><dt class="w-32 text-gray-500">Telefon</dt><dd>{{ firma.phone or '—' }}</dd></div>
+      <div class="flex"><dt class="w-32 text-gray-500">Email</dt><dd>{{ firma.email or '—' }}</dd></div>
+      <div class="flex"><dt class="w-32 text-gray-500">Adresă</dt><dd>{{ firma.address or '—' }}</dd></div>
+      <div class="flex"><dt class="w-32 text-gray-500">Responsabil</dt><dd>{{ firma.owner.name if firma.owner else '—' }}</dd></div>
+    </dl>
+  </div>
+  <div class="bg-white rounded shadow p-5">
+    <h2 class="font-semibold mb-3">Contacte ({{ firma.contacts|length }})</h2>
+    <ul class="text-sm divide-y">
+      {% for c in firma.contacts %}
+      <li class="py-1"><a href="/contacte/{{ c.id }}" class="text-blue-600 hover:underline">{{ c.full_name }}</a>
+        <span class="text-gray-500">· {{ c.title }}</span></li>
+      {% else %}
+      <li class="text-gray-500">Niciun contact.</li>
+      {% endfor %}
+    </ul>
+  </div>
+  <div class="bg-white rounded shadow p-5">
+    <h2 class="font-semibold mb-3">Oportunități ({{ firma.opportunities|length }})</h2>
+    <ul class="text-sm divide-y">
+      {% for o in firma.opportunities %}
+      <li class="py-1"><a href="/oportunitati/{{ o.id }}" class="text-blue-600 hover:underline">{{ o.name }}</a>
+        <span class="text-gray-500">· {{ "%.0f"|format(o.amount) }} EUR · {{ dict(stages).get(o.stage, o.stage) }}</span></li>
+      {% else %}
+      <li class="text-gray-500">Nicio oportunitate.</li>
+      {% endfor %}
+    </ul>
+  </div>
+  <div class="bg-white rounded shadow p-5">
+    <h2 class="font-semibold mb-3">Cazuri ({{ firma.cases|length }})</h2>
+    <ul class="text-sm divide-y">
+      {% for c in firma.cases %}
+      <li class="py-1"><a href="/cazuri/{{ c.id }}" class="text-blue-600 hover:underline">{{ c.subject }}</a>
+        <span class="text-gray-500">· {{ dict(case_status).get(c.status, c.status) }}</span></li>
+      {% else %}
+      <li class="text-gray-500">Niciun caz.</li>
+      {% endfor %}
+    </ul>
+  </div>
+</div>
+<div class="bg-white rounded shadow p-5 mb-6">
+  <div class="flex items-center justify-between mb-3">
+    <h2 class="font-semibold">Activități</h2>
+    <a href="/activitati/nou?related_kind=firma&related_id={{ firma.id }}" class="text-sm bg-blue-600 text-white px-3 py-1 rounded hover:bg-blue-700">+ Adaugă activitate</a>
+  </div>
+  {% if activitati %}
+  <ul class="divide-y text-sm">
+    {% for a in activitati %}
+    <li class="py-2 flex justify-between">
+      <div><span class="text-xs bg-gray-100 rounded px-2 py-0.5 mr-2">{{ dict(tipuri_act).get(a.tip, a.tip) }}</span>{{ a.subject }}
+        <div class="text-xs text-gray-500">{{ 'Închisă' if a.status=='inchis' else 'Deschisă' }}</div></div>
+      <form method="post" action="/activitati/{{ a.id }}/comuta"><button class="text-xs text-blue-600 hover:underline">{{ 'Redeschide' if a.status=='inchis' else 'Închide' }}</button></form>
+    </li>
+    {% endfor %}
+  </ul>
+  {% else %}
+  <p class="text-sm text-gray-500">Nicio activitate.</p>
+  {% endif %}
+</div>
+<a href="/firme" class="text-blue-600 hover:underline text-sm">← Înapoi la firme</a>
+{% endblock %}

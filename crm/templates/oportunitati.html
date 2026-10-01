@@ -1,0 +1,70 @@
+{% extends "base.html" %}
+{% block title %}Oportunități{% endblock %}
+{% block content %}
+<div class="flex items-center justify-between mb-6">
+  <h1 class="text-2xl font-bold">Oportunități — Kanban</h1>
+  <button onclick="document.getElementById('formNou').classList.toggle('hidden')" class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700">+ Oportunitate nouă</button>
+</div>
+
+<div id="formNou" class="hidden bg-white rounded shadow p-6 mb-6 max-w-3xl">
+  <h2 class="font-semibold mb-4">Oportunitate nouă</h2>
+  <form method="post" action="/oportunitati/nou" class="grid grid-cols-2 gap-4">
+    <div class="col-span-2"><label class="block text-sm font-medium mb-1">Nume *</label>
+      <input name="name" required class="w-full border rounded px-3 py-2" placeholder="ex: Licențe CRM — Client X"></div>
+    <div><label class="block text-sm font-medium mb-1">Firmă</label>
+      <select name="account_id" class="w-full border rounded px-3 py-2"><option value="">—</option>
+      {% for f in firme %}<option value="{{ f.id }}">{{ f.name }}</option>{% endfor %}</select></div>
+    <div><label class="block text-sm font-medium mb-1">Contact</label>
+      <select name="contact_id" class="w-full border rounded px-3 py-2"><option value="">—</option>
+      {% for c in contacte %}<option value="{{ c.id }}">{{ c.full_name }}</option>{% endfor %}</select></div>
+    <div><label class="block text-sm font-medium mb-1">Valoare (EUR)</label>
+      <input type="number" step="0.01" min="0" name="amount" value="0" class="w-full border rounded px-3 py-2"></div>
+    <div><label class="block text-sm font-medium mb-1">Probabilitate (%)</label>
+      <input type="number" min="0" max="100" name="probability" value="10" class="w-full border rounded px-3 py-2"></div>
+    <div><label class="block text-sm font-medium mb-1">Data închiderii</label>
+      <input type="date" name="close_date" class="w-full border rounded px-3 py-2"></div>
+    <div><label class="block text-sm font-medium mb-1">Responsabil</label>
+      <select name="owner_id" class="w-full border rounded px-3 py-2">
+      {% for u in users %}<option value="{{ u.id }}">{{ u.name }}</option>{% endfor %}</select></div>
+    <div class="col-span-2"><button class="bg-blue-600 text-white px-5 py-2 rounded hover:bg-blue-700">Salvează</button></div>
+  </form>
+</div>
+
+<div class="flex gap-3 overflow-x-auto pb-4">
+  {% for key, label in stages %}
+  <div class="bg-gray-200 rounded w-64 flex-shrink-0 p-2 min-h-[300px]" data-stage="{{ key }}"
+       ondragover="event.preventDefault()" ondrop="dropCard(event, '{{ key }}')">
+    <div class="font-semibold text-sm px-2 py-1 flex justify-between">
+      <span>{{ label }}</span>
+      <span class="text-gray-500">{{ by_stage[key]|length }}</span>
+    </div>
+    <div class="space-y-2 mt-1">
+      {% for o in by_stage[key] %}
+      <div class="bg-white rounded shadow p-3 text-sm cursor-move" draggable="true"
+           ondragstart="event.dataTransfer.setData('text/plain','{{ o.id }}')" id="card-{{ o.id }}">
+        <a href="/oportunitati/{{ o.id }}" class="font-medium text-blue-600 hover:underline">{{ o.name }}</a>
+        <div class="text-gray-600">{{ "%.0f"|format(o.amount) }} EUR · {{ o.probability }}%</div>
+        <div class="text-xs text-gray-400">{{ o.account.name if o.account else '' }}</div>
+      </div>
+      {% endfor %}
+    </div>
+  </div>
+  {% endfor %}
+</div>
+<p class="text-xs text-gray-500 mt-2">Trage cardurile între coloane pentru a schimba stagiul.</p>
+{% endblock %}
+{% block scripts %}
+<script>
+async function dropCard(ev, newStage) {
+  ev.preventDefault();
+  const id = ev.dataTransfer.getData('text/plain');
+  const r = await fetch('/api/oportunitati/' + id + '/stage', {
+    method: 'PATCH',
+    headers: {'Content-Type': 'application/json'},
+    body: JSON.stringify({stage: newStage})
+  });
+  if (r.ok) { location.reload(); }
+  else { const d = await r.json(); alert('Eroare: ' + (d.error || r.status)); }
+}
+</script>
+{% endblock %}

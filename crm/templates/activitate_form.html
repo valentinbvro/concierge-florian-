@@ -1,0 +1,55 @@
+{% extends "base.html" %}
+{% block title %}Activitate nouă{% endblock %}
+{% block content %}
+<h1 class="text-2xl font-bold mb-6">Activitate nouă</h1>
+<form method="post" action="/activitati/nou" class="bg-white rounded shadow p-6 max-w-2xl space-y-4">
+  <input type="hidden" name="back" value="{{ request.headers.get('referer', '/activitati') }}">
+  <div class="grid grid-cols-2 gap-4">
+    <div><label class="block text-sm font-medium mb-1">Tip</label>
+      <select name="tip" class="w-full border rounded px-3 py-2">
+      {% for k,l in tipuri_act %}<option value="{{ k }}">{{ l }}</option>{% endfor %}</select></div>
+    <div><label class="block text-sm font-medium mb-1">Scadență</label>
+      <input type="date" name="due_date" value="{{ today.strftime('%Y-%m-%d') }}" class="w-full border rounded px-3 py-2"></div>
+  </div>
+  <div><label class="block text-sm font-medium mb-1">Subiect *</label>
+    <input name="subject" required class="w-full border rounded px-3 py-2"></div>
+  <div><label class="block text-sm font-medium mb-1">Descriere</label>
+    <textarea name="description" rows="3" class="w-full border rounded px-3 py-2"></textarea></div>
+  <div class="grid grid-cols-2 gap-4">
+    <div><label class="block text-sm font-medium mb-1">Legat de (tip)</label>
+      <select id="relKind" name="related_kind" class="w-full border rounded px-3 py-2">
+        <option value="">— nimic —</option>
+        {% for k,l in tipuri_rel %}<option value="{{ k }}" {% if related_kind==k %}selected{% endif %}>{{ l }}</option>{% endfor %}
+      </select></div>
+    <div><label class="block text-sm font-medium mb-1">Entitate</label>
+      <select id="relId" name="related_id" class="w-full border rounded px-3 py-2"><option value="">—</option></select></div>
+  </div>
+  <div><label class="block text-sm font-medium mb-1">Responsabil</label>
+    <select name="owner_id" class="w-full border rounded px-3 py-2">
+    {% for u in users %}<option value="{{ u.id }}">{{ u.name }}</option>{% endfor %}</select></div>
+  <div class="flex gap-2">
+    <button class="bg-blue-600 text-white px-5 py-2 rounded hover:bg-blue-700">Salvează</button>
+    <a href="/activitati" class="bg-gray-200 px-5 py-2 rounded hover:bg-gray-300">Renunță</a>
+  </div>
+</form>
+{% endblock %}
+{% block scripts %}
+<script>
+const ENTITATI = {{ entitati|tojson }};
+const kindSel = document.getElementById('relKind');
+const idSel = document.getElementById('relId');
+const preselect = "{{ related_id }}";
+function refreshIds() {
+  const k = kindSel.value;
+  idSel.innerHTML = '<option value="">—</option>';
+  (ENTITATI[k] || []).forEach(([id, label]) => {
+    const o = document.createElement('option');
+    o.value = id; o.textContent = label;
+    if (String(id) === preselect) o.selected = true;
+    idSel.appendChild(o);
+  });
+}
+kindSel.addEventListener('change', refreshIds);
+refreshIds();
+</script>
+{% endblock %}

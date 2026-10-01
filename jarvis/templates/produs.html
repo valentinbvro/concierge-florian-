@@ -1,0 +1,71 @@
+{% extends "base.html" %}
+{% block titlu %}{{ t('nav_produs', lang) }}{% endblock %}
+{% block continut %}
+<h2>{{ t('nav_produs', lang) }}</h2>
+<div class="card">
+  <input id="titlu" placeholder="💡 {{ t('pg_produs_idei', lang) }}…" style="width:60%">
+  <input id="descriere" placeholder="…" style="width:30%">
+  <button class="btn" onclick="adaugaIdee()">{{ t('c_adauga', lang) }}</button>
+</div>
+<h3>{{ t('pg_produs_idei', lang) }}</h3>
+<div id="idei"></div>
+<h3>{{ t('pg_produs_oport', lang) }}</h3>
+<div class="card">
+  <input id="otitlu" placeholder="📋 …" style="width:40%">
+  <input id="oinv" type="number" placeholder="EUR inv." style="width:12%">
+  <input id="oven" type="number" placeholder="EUR/lună" style="width:12%">
+  <button class="btn" onclick="adaugaOportunitate()">{{ t('c_adauga', lang) }}</button>
+</div>
+<div id="oportunitati"></div>
+<script>
+const esc = s => (s || '').replace(/</g, '&lt;');
+async function incarca() {
+  const idei = await (await fetch('/api/idei')).json();
+  document.getElementById('idei').innerHTML = '<div class="card">' +
+    (idei.length ? idei.map(i =>
+      '<div style="padding:6px 0;border-top:1px solid #334155;"><strong>#' + i.id + '</strong> ' +
+      esc(i.titlu) + ' <span class="badge">' + i.scor + '/10</span> <span class="badge">' +
+      esc(i.status) + '</span>' +
+      (i.descriere ? '<br><small style="color:#94a3b8">' + esc(i.descriere) + '</small>' : '') +
+      ' <button class="btn mic" onclick="vot(' + i.id + ')">+1</button></div>').join('')
+      : '—') + '</div>';
+  const ops = await (await fetch('/api/oportunitati')).json();
+  document.getElementById('oportunitati').innerHTML = '<div class="card"><table>' +
+    '<tr><th>#</th><th>—</th><th>Inv.</th><th>Venit/lună</th><th>Payback</th><th>ROI</th><th>Status</th></tr>' +
+    ops.map(o => '<tr><td>' + o.id + '</td><td><strong>' + esc(o.titlu) + '</strong></td>' +
+      '<td>' + o.investitie_estimata.toFixed(0) + ' EUR</td>' +
+      '<td>' + o.venit_lunar_estimat.toFixed(0) + ' EUR</td>' +
+      '<td>' + (o.payback_luni ? o.payback_luni + ' luni' : '—') + '</td>' +
+      '<td>' + (o.roi_anual_pct ? o.roi_anual_pct + '%' : '—') + '</td>' +
+      '<td><span class="badge">' + esc(o.status) + '</span></td></tr>').join('') +
+    '</table></div>';
+}
+async function adaugaIdee() {
+  const titlu = document.getElementById('titlu').value.trim();
+  if (!titlu) return;
+  await fetch('/api/idei', {method: 'POST', headers: {'Content-Type': 'application/json'},
+    body: JSON.stringify({titlu, descriere: document.getElementById('descriere').value})});
+  document.getElementById('titlu').value = '';
+  incarca();
+}
+async function vot(id) {
+  const idei = await (await fetch('/api/idei')).json();
+  const cur = (idei.find(i => i.id === id) || {}).scor || 0;
+  await fetch('/api/idei/' + id + '/vot', {method: 'POST',
+    headers: {'Content-Type': 'application/json'},
+    body: JSON.stringify({scor: Math.min(10, cur + 1)})});
+  incarca();
+}
+async function adaugaOportunitate() {
+  const titlu = document.getElementById('otitlu').value.trim();
+  if (!titlu) return;
+  await fetch('/api/oportunitati', {method: 'POST', headers: {'Content-Type': 'application/json'},
+    body: JSON.stringify({titlu,
+      investitie_estimata: parseFloat(document.getElementById('oinv').value) || 0,
+      venit_lunar_estimat: parseFloat(document.getElementById('oven').value) || 0})});
+  document.getElementById('otitlu').value = '';
+  incarca();
+}
+incarca();
+</script>
+{% endblock %}

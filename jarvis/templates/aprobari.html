@@ -1,0 +1,43 @@
+{% extends "base.html" %}
+{% block titlu %}{{ t('nav_aprobari', lang) }}{% endblock %}
+{% block continut %}
+<h2>{{ t('ap_titlu', lang) }}</h2>
+<div id="lista"></div>
+<h3>{{ t('ap_matrice', lang) }}</h3>
+<div class="card">
+  {% for actiune, politica in matrice.items() %}
+  <div style="padding: 6px 0; border-top: 1px solid #334155;">
+    <code>{{ actiune }}</code> →
+    {% if politica == 'singur' %}<span class="badge faza">{{ t('ap_singur', lang) }}</span>
+    {% elif politica == 'aprobare' %}<span class="badge">{{ t('ap_necesita', lang) }}</span>
+    {% else %}<span class="badge" style="background:#7f1d1d;color:#fca5a5">{{ t('ap_interzis', lang) }}</span>{% endif %}
+  </div>
+  {% endfor %}
+</div>
+<script>
+const T = {
+  aproba: {{ t('ap_aproba', lang) | tojson }},
+  respinge: {{ t('ap_respinge', lang) | tojson }},
+  nicio: {{ t('ap_nicio', lang) | tojson }},
+};
+async function incarca() {
+  const r = await fetch('/api/aprobari');
+  const lista = await r.json();
+  const el = document.getElementById('lista');
+  if (!lista.length) { el.innerHTML = '<div class="card">' + T.nicio + '</div>'; return; }
+  el.innerHTML = lista.map(a =>
+    '<div class="card"><strong>#' + a.id + ' — ' + a.titlu.replace(/</g,'&lt;') + '</strong><br>' +
+    '<small style="color:#94a3b8">tip: ' + a.tip + ' · cerut de: ' + a.solicitat_de.replace(/</g,'&lt;') + '</small>' +
+    '<p style="white-space: pre-wrap">' + (a.detalii || '').replace(/</g, '&lt;') + '</p>' +
+    '<button class="btn verde" onclick="decide(' + a.id + ', \'aprobat\')">' + T.aproba + '</button> ' +
+    '<button class="btn rosu" onclick="decide(' + a.id + ', \'respins\')">' + T.respinge + '</button></div>'
+  ).join('');
+}
+async function decide(id, decizie) {
+  await fetch('/api/aprobari/' + id + '/decide', {method: 'POST',
+    headers: {'Content-Type': 'application/json'}, body: JSON.stringify({decizie})});
+  incarca();
+}
+incarca();
+</script>
+{% endblock %}

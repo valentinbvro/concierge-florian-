@@ -1,0 +1,35 @@
+{% extends "base.html" %}
+{% block titlu %}{{ t('nav_cunostinte', lang) }}{% endblock %}
+{% block continut %}
+<h2>{{ t('cu_titlu', lang) }}</h2>
+<div class="card">
+  <small style="color:#94a3b8">{{ t('cu_hint', lang) }}<br>{{ t('cu_chat_hint', lang) }}</small>
+  <h3>{{ t('cu_adauga_titlu', lang) }}</h3>
+  <input id="i" placeholder="{{ t('cu_intrebare_ph', lang) }}" style="width:100%; margin-bottom:8px;">
+  <textarea id="r" placeholder="{{ t('cu_raspuns_ph', lang) }}" rows="3" style="width:100%; margin-bottom:8px;"></textarea>
+  <button class="btn" onclick="adauga()">{{ t('c_salveaza', lang) }}</button>
+</div>
+<div id="lista"></div>
+<script>
+const T = { nicio: {{ t('cu_nicio', lang) | tojson }} };
+async function incarca() {
+  const r = await fetch('/api/cunostinte');
+  const items = await r.json();
+  document.getElementById('lista').innerHTML = items.length ? items.map(x =>
+    '<div class="card"><strong>Î:</strong> ' + x.intrebare.replace(/</g,'&lt;') + '<br>' +
+    '<strong>R:</strong> ' + x.raspuns.replace(/</g,'&lt;') + '</div>').join('')
+    : '<div class="card">' + T.nicio + '</div>';
+}
+async function adauga() {
+  const intrebare = document.getElementById('i').value.trim();
+  const raspuns = document.getElementById('r').value.trim();
+  if (!intrebare || !raspuns) return;
+  await fetch('/api/cunostinte', {method:'POST', headers:{'Content-Type':'application/json'},
+    body: JSON.stringify({intrebare, raspuns})});
+  document.getElementById('i').value = '';
+  document.getElementById('r').value = '';
+  incarca();
+}
+incarca();
+</script>
+{% endblock %}

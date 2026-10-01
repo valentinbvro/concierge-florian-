@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="{{ lang }}">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Jarvis — {% block titlu %}{% endblock %}</title>
+<style>
+  * { box-sizing: border-box; }
+  body { font-family: system-ui, -apple-system, "Segoe UI", sans-serif; margin: 0; background: #0f172a; color: #e2e8f0; }
+  header { background: #1e293b; padding: 12px 20px; display: flex; gap: 24px; align-items: center; flex-wrap: wrap; }
+  header .logo { font-weight: 700; font-size: 1.2em; color: #38bdf8; }
+  header nav a { color: #94a3b8; text-decoration: none; margin-right: 16px; }
+  header nav a:hover, header nav a.activ { color: #fff; }
+  .lang { margin-left: auto; }
+  .lang a { color: #94a3b8; text-decoration: none; margin-left: 8px; font-size: .85em; }
+  .lang a.cur { color: #fff; font-weight: 700; }
+  main { max-width: 860px; margin: 0 auto; padding: 20px; }
+  .card { background: #1e293b; border-radius: 12px; padding: 16px; margin-bottom: 16px; }
+  .btn { background: #38bdf8; color: #0f172a; border: none; border-radius: 8px; padding: 8px 16px; cursor: pointer; font-weight: 600; }
+  .btn.verde { background: #4ade80; }
+  .btn.rosu { background: #f87171; }
+  .btn.mic { padding: 4px 10px; font-size: .85em; }
+  .btn:hover { opacity: .9; }
+  .badge { display: inline-block; font-size: .75em; padding: 2px 8px; border-radius: 999px; background: #334155; }
+  .badge.faza { background: #14532d; color: #86efac; }
+  input[type=text], input[type=number], textarea, select { padding: 8px; border-radius: 8px; border: 1px solid #334155; background: #0f172a; color: #e2e8f0; }
+  table { width: 100%; border-collapse: collapse; font-size: .92em; }
+  th, td { text-align: left; padding: 8px; border-top: 1px solid #334155; vertical-align: top; }
+  th { color: #94a3b8; font-weight: 600; }
+</style>
+</head>
+<body>
+<header>
+  <div class="logo">◆ JARVIS <span class="badge">Faza 4</span></div>
+  <nav>
+    <a href="/chat">{{ t('nav_chat', lang) }}</a>
+    <a href="/aprobari">{{ t('nav_aprobari', lang) }}</a>
+    <a href="/dispecerat">{{ t('nav_dispecerat', lang) }}</a>
+    <a href="/finante">{{ t('nav_finante', lang) }}</a>
+    <a href="/bi">{{ t('nav_bi', lang) }}</a>
+    <a href="/produs">{{ t('nav_produs', lang) }}</a>
+    <a href="/growth">{{ t('nav_growth', lang) }}</a>
+    <a href="/risc">{{ t('nav_risc', lang) }}</a>
+    <a href="/catalog">{{ t('nav_catalog', lang) }}</a>
+    <a href="/oferte">{{ t('nav_oferte', lang) }}</a>
+    <a href="/cunostinte">{{ t('nav_cunostinte', lang) }}</a>
+    <a href="/marketing">{{ t('nav_marketing', lang) }}</a>
+    <a href="/competitori">{{ t('nav_competitori', lang) }}</a>
+    <a href="/hermes">{{ t('nav_hermes', lang) }}</a>
+    <a href="/demo" style="color:#e9c766;font-weight:700">◆ {{ t('nav_demo', lang) }}</a>
+  </nav>
+  <div class="lang">{{ t('lang_label', lang) }}:
+    <a href="/limba/ro" class="{% if lang == 'ro' %}cur{% endif %}">RO</a>
+    <a href="/limba/fr" class="{% if lang == 'fr' %}cur{% endif %}">FR</a>
+  </div>
+</header>
+<main>
+{% if demo_activ %}
+<div style="background:#c9a227;color:#1a1206;text-align:center;font-weight:700;font-size:.85em;
+            letter-spacing:.08em;padding:6px 12px;margin:-16px -16px 16px;">
+  ◆ {{ t('demo_banner', lang) }} · <a href="/demo" style="color:#1a1206;text-decoration:underline">{{ t('nav_demo', lang) }}</a>
+</div>
+{% endif %}
+{% block continut %}{% endblock %}</main>
+</body>
+</html>

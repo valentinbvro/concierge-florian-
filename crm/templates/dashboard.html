@@ -1,0 +1,87 @@
+{% extends "base.html" %}
+{% block title %}Panou principal{% endblock %}
+{% block content %}
+<h1 class="text-2xl font-bold mb-6">Panou principal</h1>
+
+<div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
+  <div class="bg-white rounded shadow p-5">
+    <div class="text-sm text-gray-500">Valoare pipeline deschis</div>
+    <div class="text-2xl font-bold text-blue-700">{{ "%.0f"|format(pipeline_val) }} EUR</div>
+  </div>
+  <div class="bg-white rounded shadow p-5">
+    <div class="text-sm text-gray-500">Oportunități deschise</div>
+    <div class="text-2xl font-bold">{{ opps_open }}</div>
+  </div>
+  <div class="bg-white rounded shadow p-5">
+    <div class="text-sm text-gray-500">Leaduri luna curentă</div>
+    <div class="text-2xl font-bold">{{ leads_month }}</div>
+  </div>
+  <div class="bg-white rounded shadow p-5">
+    <div class="text-sm text-gray-500">Cazuri deschise</div>
+    <div class="text-2xl font-bold text-amber-600">{{ cases_open }}</div>
+  </div>
+</div>
+
+<div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
+  <div class="bg-white rounded shadow p-5">
+    <h2 class="font-semibold mb-3">Pipeline pe stagii (EUR)</h2>
+    <canvas id="chStages" height="220"></canvas>
+  </div>
+  <div class="bg-white rounded shadow p-5">
+    <h2 class="font-semibold mb-3">Leaduri pe status</h2>
+    <canvas id="chLeads" height="220"></canvas>
+  </div>
+  <div class="bg-white rounded shadow p-5">
+    <h2 class="font-semibold mb-3">Cazuri pe prioritate</h2>
+    <canvas id="chCases" height="220"></canvas>
+  </div>
+</div>
+
+<div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+  <div class="bg-white rounded shadow p-5">
+    <h2 class="font-semibold mb-3">Sarcinile mele</h2>
+    {% if my_tasks %}
+    <ul class="divide-y text-sm">
+      {% for t in my_tasks %}
+      <li class="py-2 flex items-center justify-between">
+        <div>
+          <form method="post" action="/activitati/{{ t.id }}/comuta" class="inline">
+            <button class="w-4 h-4 border rounded mr-2 align-middle" title="Marchează încheiată"></button>
+          </form>
+          <span class="{% if t.due_date and t.due_date < today %}text-red-600 font-semibold{% endif %}">{{ t.subject }}</span>
+          <div class="text-xs text-gray-500">{{ t.related_label }}{% if t.due_date %} · scadență {{ t.due_date.strftime('%d.%m.%Y') }}{% endif %}</div>
+        </div>
+      </li>
+      {% endfor %}
+    </ul>
+    {% else %}
+    <p class="text-sm text-gray-500">Nicio sarcină deschisă. 🎉</p>
+    {% endif %}
+  </div>
+  <div class="bg-white rounded shadow p-5">
+    <h2 class="font-semibold mb-3">Ultimele activități</h2>
+    <ul class="divide-y text-sm">
+      {% for a in recent %}
+      <li class="py-2">
+        <span class="inline-block px-2 py-0.5 rounded text-xs bg-gray-100 mr-2">{{ dict(tipuri_act).get(a.tip, a.tip) }}</span>
+        {{ a.subject }}
+        <div class="text-xs text-gray-500">{{ a.owner.name if a.owner else '' }} · {{ a.related_label }}</div>
+      </li>
+      {% endfor %}
+    </ul>
+  </div>
+</div>
+{% endblock %}
+{% block scripts %}
+<script>
+new Chart(document.getElementById('chStages'), {type:'bar',
+  data:{labels:{{ stage_labels|tojson }}, datasets:[{data:{{ stage_vals|tojson }},
+  backgroundColor:'#3b82f6'}]}, options:{plugins:{legend:{display:false}}, scales:{y:{beginAtZero:true}}}});
+new Chart(document.getElementById('chLeads'), {type:'doughnut',
+  data:{labels:{{ ls_labels|tojson }}, datasets:[{data:{{ ls_vals|tojson }},
+  backgroundColor:['#93c5fd','#3b82f6','#10b981','#f59e0b','#ef4444']}]}});
+new Chart(document.getElementById('chCases'), {type:'doughnut',
+  data:{labels:{{ pr_labels|tojson }}, datasets:[{data:{{ pr_vals|tojson }},
+  backgroundColor:['#d1d5db','#fbbf24','#f97316','#ef4444']}]}});
+</script>
+{% endblock %}

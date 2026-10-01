@@ -1,0 +1,75 @@
+{% extends "base.html" %}
+{% block titlu %}{{ t('nav_growth', lang) }}{% endblock %}
+{% block continut %}
+<h2>{{ t('nav_growth', lang) }}</h2>
+<div class="card">
+  <input id="ititlu" placeholder="💰 …" style="width:35%">
+  <input id="icost" type="number" placeholder="EUR cost" style="width:12%">
+  <input id="ivenit" type="number" placeholder="EUR/lună" style="width:12%">
+  <button class="btn" onclick="adaugaInvestitie()">{{ t('c_adauga', lang) }}</button>
+</div>
+<h3>{{ t('pg_growth_inv', lang) }}</h3>
+<div id="investitii"></div>
+<h3>{{ t('pg_growth_scenariu', lang) }}</h3>
+<div class="card">
+  <input id="procent" type="number" value="20" style="width:10%"> %
+  <button class="btn" onclick="ruleazaScenariu()">▶</button>
+  <div id="scenariu" style="margin-top:8px"></div>
+</div>
+<h3>{{ t('pg_growth_buget', lang) }}</h3>
+<div class="card">
+  <input id="bluna" value="2026-10" style="width:12%">
+  <input id="bcateg" placeholder="marketing" style="width:20%">
+  <input id="bsuma" type="number" placeholder="EUR" style="width:12%">
+  <button class="btn" onclick="seteazaBuget()">{{ t('c_salveaza', lang) }}</button>
+</div>
+<div id="buget"></div>
+<script>
+const esc = s => (s || '').replace(/</g, '&lt;');
+async function incarca() {
+  const invs = await (await fetch('/api/investitii')).json();
+  document.getElementById('investitii').innerHTML = '<div class="card"><table>' +
+    '<tr><th>#</th><th>—</th><th>Cost</th><th>Venit/lună</th><th>Payback</th><th>ROI</th><th>Verdict</th><th>Status</th></tr>' +
+    invs.map(a => '<tr><td>' + a.id + '</td><td><strong>' + esc(a.titlu) + '</strong></td>' +
+      '<td>' + a.cost.toFixed(0) + ' EUR</td><td>' + a.venit_lunar_estimat.toFixed(0) + ' EUR</td>' +
+      '<td>' + (a.payback_luni ? a.payback_luni + ' luni' : '—') + '</td>' +
+      '<td>' + (a.roi_anual_pct ? a.roi_anual_pct + '%' : '—') + '</td>' +
+      '<td><span class="badge">' + esc(a.verdict) + '</span></td>' +
+      '<td><span class="badge">' + esc(a.status) + '</span></td></tr>').join('') +
+    '</table></div>';
+  const b = await (await fetch('/api/buget')).json();
+  const linii = Object.entries(b.categorii).filter(([_, v]) => v > 0)
+    .map(([c, v]) => '<div style="padding:4px 0;">' + esc(c) + ': <strong>' + v.toFixed(0) +
+         ' EUR</strong></div>').join('') || '—';
+  document.getElementById('buget').innerHTML = '<div class="card"><strong>' + esc(b.luna) + '</strong><br>' +
+    linii + '<div style="margin-top:8px">Total planificat: <strong>' + b.total_planificat.toFixed(0) +
+    ' EUR</strong> · Venituri facturate: ' + b.venituri_facturate.toFixed(2) + ' EUR</div></div>';
+}
+async function adaugaInvestitie() {
+  const titlu = document.getElementById('ititlu').value.trim();
+  if (!titlu) return;
+  await fetch('/api/investitii', {method: 'POST', headers: {'Content-Type': 'application/json'},
+    body: JSON.stringify({titlu,
+      cost: parseFloat(document.getElementById('icost').value) || 0,
+      venit_lunar_estimat: parseFloat(document.getElementById('ivenit').value) || 0})});
+  document.getElementById('ititlu').value = '';
+  incarca();
+}
+async function seteazaBuget() {
+  await fetch('/api/buget', {method: 'POST', headers: {'Content-Type': 'application/json'},
+    body: JSON.stringify({luna: document.getElementById('bluna').value,
+      categorie: document.getElementById('bcateg').value || 'altele',
+      planificat: parseFloat(document.getElementById('bsuma').value) || 0})});
+  incarca();
+}
+async function ruleazaScenariu() {
+  const pct = parseFloat(document.getElementById('procent').value) || 20;
+  const r = await (await fetch('/api/chat', {method: 'POST',
+    headers: {'Content-Type': 'application/json'},
+    body: JSON.stringify({text: 'scenariu +' + pct + '%'})})).json();
+  document.getElementById('scenariu').innerHTML =
+    '<pre style="white-space:pre-wrap">' + esc(r.raspuns) + '</pre>';
+}
+incarca();
+</script>
+{% endblock %}

@@ -1,0 +1,22 @@
+{% extends "base.html" %}
+{% block titlu %}{{ t('nav_oferte', lang) }}{% endblock %}
+{% block continut %}
+<h2>{{ t('of_titlu', lang) }}</h2>
+<div class="card">
+  <small style="color:#94a3b8">{{ t('of_hint', lang) }}</small>
+</div>
+{% for o in oferte %}
+<div class="card">
+  <strong>{{ o.numar or ('#' ~ o.id) }}</strong>
+  <span class="badge">{{ o.stare }}</span><br>
+  <span style="color:#94a3b8">{{ o.client_nume or '—' }} · {{ o.total | round(2) }} EUR · {{ o.created_at.strftime('%d.%m.%Y') }}</span><br>
+  {% if o.fisier_pdf %}
+  <a class="btn" style="display:inline-block; margin-top:8px; text-decoration:none;" href="/oferte/{{ o.id }}/pdf">{{ t('of_descarca', lang) }}</a>
+  {% else %}
+  <small style="color:#94a3b8">{{ t('of_fara_pdf', lang) }}</small>
+  {% endif %}
+</div>
+{% else %}
+<div class="card">{{ t('of_nicio', lang) }}</div>
+{% endfor %}
+{% endblock %}
